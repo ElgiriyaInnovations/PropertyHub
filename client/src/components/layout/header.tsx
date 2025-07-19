@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { RoleSwitcher } from "@/components/ui/role-switcher";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -22,11 +24,13 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
+  const { switchRole, isUpdating } = useRoleSwitch();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -89,6 +93,12 @@ export default function Header() {
 
           {/* Desktop User Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Role Switcher */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Role:</span>
+              <RoleSwitcher />
+            </div>
+            
             {/* Messages */}
             <Link href="/messages">
               <Button variant="ghost" size="sm" className="relative">
@@ -182,6 +192,48 @@ export default function Header() {
             })}
             
             <div className="border-t border-neutral-200 pt-4 mt-4">
+              {/* Role Switcher for Mobile */}
+              <div className="px-3 py-2 border-b border-neutral-200 pb-4 mb-4">
+                <div className="text-sm font-medium text-neutral-700 mb-3">Current Role</div>
+                <div className="space-y-2">
+                  {["buyer", "seller", "broker"].map((role) => {
+                    const isActive = user?.role === role;
+                    const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+                    const roleIcons = {
+                      buyer: "🏠",
+                      seller: "📋", 
+                      broker: "👔"
+                    };
+                    return (
+                      <button
+                        key={role}
+                        onClick={() => {
+                          if (user?.role !== role) {
+                            switchRole(role as "buyer" | "seller" | "broker");
+                          }
+                          setMobileMenuOpen(false);
+                        }}
+                        disabled={isUpdating}
+                        className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-blue-500 text-white shadow-md"
+                            : "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-gray-200"
+                        } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg">{roleIcons[role as keyof typeof roleIcons]}</span>
+                          <span>{roleLabel}</span>
+                        </div>
+                        {isActive && <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Active</span>}
+                        {isUpdating && user?.role !== role && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
               <Link href="/messages">
                 <button
                   onClick={() => setMobileMenuOpen(false)}

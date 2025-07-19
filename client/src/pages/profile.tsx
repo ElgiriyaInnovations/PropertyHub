@@ -23,7 +23,6 @@ import { User, Settings, LogOut, Phone, Mail, MapPin } from "lucide-react";
 const profileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  role: z.enum(["buyer", "seller", "broker"]),
   phone: z.string().optional(),
   bio: z.string().optional(),
 });
@@ -56,7 +55,6 @@ export default function Profile() {
     defaultValues: {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
-      role: user?.role || "buyer",
       phone: user?.phone || "",
       bio: user?.bio || "",
     },
@@ -68,7 +66,6 @@ export default function Profile() {
       form.reset({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        role: user.role || "buyer",
         phone: user.phone || "",
         bio: user.bio || "",
       });
@@ -77,7 +74,10 @@ export default function Profile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      return apiRequest("PUT", "/api/profile", data);
+      return apiRequest("/api/profile", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: async (response) => {
       const updatedUser = await response.json();
@@ -189,6 +189,10 @@ export default function Profile() {
                 
                 <p className="text-sm text-neutral-500 mb-6">
                   {getRoleDescription(user?.role || "buyer")}
+                </p>
+                
+                <p className="text-xs text-neutral-400 mb-6">
+                  💡 You can switch your role anytime from the navigation bar
                 </p>
 
                 <Separator className="mb-6" />
@@ -344,28 +348,7 @@ export default function Profile() {
                         </p>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Role</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="buyer">Buyer - Looking for properties</SelectItem>
-                                <SelectItem value="seller">Seller - Listing properties</SelectItem>
-                                <SelectItem value="broker">Broker - Real estate professional</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
 
                       <FormField
                         control={form.control}

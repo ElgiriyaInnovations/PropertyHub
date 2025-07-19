@@ -144,7 +144,6 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         profileImageUrl: users.profileImageUrl,
-        role: sql<string>`COALESCE(${users.role}, 'buyer')`.as('role'),
       }
     }).from(properties).leftJoin(users, eq(properties.ownerId, users.id));
 
@@ -341,7 +340,7 @@ export class DatabaseStorage implements IStorage {
           firstName: sql`CASE WHEN ${conversations.participant1Id} = ${userId} THEN ${users.firstName} ELSE p1.first_name END`.as('other_user_first_name'),
           lastName: sql`CASE WHEN ${conversations.participant1Id} = ${userId} THEN ${users.lastName} ELSE p1.last_name END`.as('other_user_last_name'),
           profileImageUrl: sql`CASE WHEN ${conversations.participant1Id} = ${userId} THEN ${users.profileImageUrl} ELSE p1.profile_image_url END`.as('other_user_profile_image'),
-          role: sql`CASE WHEN ${conversations.participant1Id} = ${userId} THEN ${users.role} ELSE p1.role END`.as('other_user_role'),
+          role: sql`'buyer'`.as('other_user_role'),
         },
         property: properties,
       })

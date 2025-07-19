@@ -60,7 +60,6 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  role: z.enum(["buyer", "seller", "broker"]).default("buyer"),
   phone: z.string().optional(),
 });
 
@@ -99,13 +98,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
-        role: validatedData.role,
         phone: validatedData.phone,
         emailVerified: false,
       });
 
-      // Generate tokens
-      const { accessToken, refreshToken } = generateTokens(user.id, user.email!, user.role);
+      // Generate tokens with default role as buyer
+      const { accessToken, refreshToken } = generateTokens(user.id, user.email!, "buyer");
       
       // Store refresh token
       const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -114,11 +112,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
 
-      // Return user data (without password)
+      // Return user data (without password) with default role
       const { password: _, refreshToken: __, ...userResponse } = user;
       res.status(201).json({
         message: "User registered successfully",
-        user: userResponse,
+        user: { ...userResponse, role: "buyer" },
         accessToken,
       });
     } catch (error) {
@@ -146,8 +144,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Generate tokens
-      const { accessToken, refreshToken } = generateTokens(user.id, user.email!, user.role);
+      // Generate tokens with default role as buyer
+      const { accessToken, refreshToken } = generateTokens(user.id, user.email!, "buyer");
       
       // Store refresh token
       const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -156,11 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
 
-      // Return user data (without password)
+      // Return user data (without password) with default role
       const { password: _, refreshToken: __, ...userResponse } = user;
       res.json({
         message: "Login successful",
-        user: userResponse,
+        user: { ...userResponse, role: "buyer" },
         accessToken,
       });
     } catch (error) {
@@ -196,8 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Refresh token expired" });
       }
 
-      // Generate new tokens
-      const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id, user.email!, user.role);
+      // Generate new tokens with default role as buyer
+      const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id, user.email!, "buyer");
       
       // Update refresh token in database
       const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -238,7 +236,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user;
       const { password: _, refreshToken: __, ...userResponse } = user;
-      res.json(userResponse);
+      // Add default role since it's not stored in DB anymore
+      res.json({ ...userResponse, role: "buyer" });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -277,19 +276,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User profile routes
+  // User profile routes (removed role since it's not stored in DB)
   app.put('/api/profile', authenticateJWT, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { role, phone, bio } = req.body;
+      const { phone, bio } = req.body;
       
       const updatedUser = await storage.updateUserProfile(userId, {
-        role,
         phone,
         bio,
       });
       
-      res.json(updatedUser);
+      // Add default role since it's not stored in DB
+      res.json({ ...updatedUser, role: "buyer" });
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
@@ -406,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/properties', authenticateJWT, authorize(['seller', 'broker']), async (req: any, res) => {
     try {
       console.log('=== CREATE PROPERTY API CALLED ===');
-      console.log('User:', req.user?.id, 'Role:', req.user?.role);
+      console.log('User:', req.user?.id);
       console.log('Request body:', JSON.stringify(req.body, null, 2));
 
       const userId = req.user.id;

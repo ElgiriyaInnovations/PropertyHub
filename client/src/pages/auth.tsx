@@ -23,7 +23,6 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  role: z.enum(["buyer", "seller", "broker"]).default("buyer"),
   phone: z.string().optional(),
 });
 
@@ -49,7 +48,6 @@ export default function Auth() {
       password: "",
       firstName: "",
       lastName: "",
-      role: "buyer",
       phone: "",
     },
   });
@@ -68,7 +66,7 @@ export default function Auth() {
     onSuccess: (data) => {
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${data.user?.firstName || 'User'}! You can switch your role anytime from the navigation bar.`,
       });
       // Set token in localStorage for API requests
       localStorage.setItem('accessToken', data.accessToken);
@@ -100,7 +98,7 @@ export default function Auth() {
     onSuccess: (data) => {
       toast({
         title: "Registration Successful",
-        description: "Account created! Please sign in.",
+        description: "Account created! You'll start as a Buyer and can switch roles anytime.",
       });
       // Switch to login tab instead of auto-login
       setActiveTab("login");
@@ -255,29 +253,7 @@ export default function Auth() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="role">Account Type</Label>
-                  <Select
-                    value={registerForm.watch("role")}
-                    onValueChange={(value: "buyer" | "seller" | "broker") => 
-                      registerForm.setValue("role", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select account type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="buyer">Buyer - Looking for properties</SelectItem>
-                      <SelectItem value="seller">Seller - Listing properties</SelectItem>
-                      <SelectItem value="broker">Broker - Real estate professional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {registerForm.formState.errors.role && (
-                    <p className="text-sm text-red-600">
-                      {registerForm.formState.errors.role.message}
-                    </p>
-                  )}
-                </div>
+
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone (Optional)</Label>

@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import type { Property } from "@shared/schema";
 import AuthHeader from "@/components/layout/auth-header";
 import Footer from "@/components/layout/footer";
 import PropertyCard from "@/components/property/property-card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { Home as HomeIcon, Search, Plus, ArrowRight } from "lucide-react";
 
@@ -28,7 +30,7 @@ export default function Home() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: featuredProperties, isLoading: propertiesLoading } = useQuery({
+  const { data: featuredProperties, isLoading: propertiesLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", { limit: 2 }],
     retry: false,
   });
@@ -53,6 +55,22 @@ export default function Home() {
       <section className="relative py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8">
+            {/* Role Badge */}
+            <div className="mb-6">
+              <Badge 
+                variant="secondary" 
+                className={`text-sm px-4 py-2 ${
+                  user?.role === 'buyer' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                  user?.role === 'seller' ? 'bg-green-100 text-green-800 border-green-200' :
+                  'bg-purple-100 text-purple-800 border-purple-200'
+                }`}
+              >
+                {user?.role === 'buyer' && '🏠 Buyer'}
+                {user?.role === 'seller' && '📋 Seller'}
+                {user?.role === 'broker' && '👔 Broker'}
+              </Badge>
+            </div>
+            
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Welcome back, {user?.firstName || user?.email}
             </h1>

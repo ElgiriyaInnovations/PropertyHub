@@ -34,7 +34,6 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role", { enum: ["buyer", "seller", "broker"] }).notNull().default("buyer"),
   phone: varchar("phone"),
   bio: text("bio"),
   // SSO fields
