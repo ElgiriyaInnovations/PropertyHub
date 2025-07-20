@@ -17,6 +17,8 @@ export async function apiRequest(
 
   // Add JWT token to requests if available
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+  
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
@@ -24,6 +26,10 @@ export async function apiRequest(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+  
+  if (userRole) {
+    headers['x-user-role'] = userRole;
   }
 
   const response = await fetch(url, {
@@ -63,10 +69,15 @@ export const getQueryFn: <T>(options: {
     console.log("Final URL:", url.toString());
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
     const headers: Record<string, string> = {};
     
     if (token) {
       headers.Authorization = `Bearer ${token}`;
+    }
+    
+    if (userRole) {
+      headers['x-user-role'] = userRole;
     }
     
     const res = await fetch(url.toString(), {

@@ -8,6 +8,13 @@
       "when": 1752895650725,
       "tag": "0000_magical_ted_forrester",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1753013019915,
+      "tag": "0001_shiny_caretaker",
+      "breakpoints": true
     }
   ]
 }

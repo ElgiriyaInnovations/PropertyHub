@@ -269,7 +269,7 @@ export default function PropertyDetail() {
 
         {/* Role Badge */}
         <div className="flex justify-center mb-6">
-          <RoleBadge />
+          <RoleBadge key={user?.role} />
         </div>
 
         {/* Image Gallery */}

@@ -73,6 +73,7 @@ export const properties = pgTable("properties", {
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   images: jsonb("images").$type<string[]>().default([]),
   amenities: jsonb("amenities").$type<string[]>().default([]),
+  needsBrokerServices: boolean("needs_broker_services"),
   ownerId: varchar("owner_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

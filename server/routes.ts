@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailVerified: false,
       });
 
-      // Generate tokens with default role as buyer
+      // Generate tokens (role will be managed client-side)
       const { accessToken, refreshToken } = generateTokens(user.id, user.email!, "buyer");
       
       // Store refresh token
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, refreshToken: __, ...userResponse } = user;
       res.status(201).json({
         message: "User registered successfully",
-        user: { ...userResponse, role: "buyer" },
+        user: { ...userResponse, role: "buyer" }, // Default to buyer, can be changed client-side
         accessToken,
       });
     } catch (error) {
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Generate tokens with default role as buyer
+      // Generate tokens (role will be managed client-side)
       const { accessToken, refreshToken } = generateTokens(user.id, user.email!, "buyer");
       
       // Store refresh token
@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, refreshToken: __, ...userResponse } = user;
       res.json({
         message: "Login successful",
-        user: { ...userResponse, role: "buyer" },
+        user: { ...userResponse, role: "buyer" }, // Default to buyer, can be changed client-side
         accessToken,
       });
     } catch (error) {
@@ -236,8 +236,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user;
       const { password: _, refreshToken: __, ...userResponse } = user;
-      // Add default role since it's not stored in DB anymore
-      res.json({ ...userResponse, role: "buyer" });
+      
+      // Get role from request headers (set by frontend)
+      const clientRole = req.headers['x-user-role'] as string;
+      const role = clientRole && ["buyer", "seller", "broker"].includes(clientRole) 
+        ? clientRole 
+        : "buyer"; // fallback to buyer
+      
+      console.log("API /auth/user - Client role from headers:", clientRole);
+      console.log("API /auth/user - Final role:", role);
+      
+      res.json({ ...userResponse, role });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -287,13 +296,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bio,
       });
       
-      // Add default role since it's not stored in DB
-      res.json({ ...updatedUser, role: "buyer" });
+      // Get role from request headers (set by frontend)
+      const clientRole = req.headers['x-user-role'] as string;
+      const role = clientRole && ["buyer", "seller", "broker"].includes(clientRole) 
+        ? clientRole 
+        : "buyer"; // fallback to buyer
+      
+      res.json({ ...updatedUser, role });
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
+
+
 
   // Property image upload
   app.post('/api/properties/upload-images', authenticateJWT, upload.array('images', 10), async (req: any, res) => {

@@ -14,18 +14,46 @@ export function useAuth() {
     refetchOnWindowFocus: false,
   });
 
-  // Load role from localStorage
+  // Load role from localStorage and listen for changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedRole = localStorage.getItem('userRole') as "buyer" | "seller" | "broker";
-      if (savedRole && ["buyer", "seller", "broker"].includes(savedRole)) {
-        setUserRole(savedRole);
+    const updateRole = () => {
+      if (typeof window !== 'undefined') {
+        const savedRole = localStorage.getItem('userRole') as "buyer" | "seller" | "broker";
+        if (savedRole && ["buyer", "seller", "broker"].includes(savedRole)) {
+          setUserRole(savedRole);
+        }
       }
-    }
+    };
+
+    // Initial load
+    updateRole();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userRole') {
+        updateRole();
+      }
+    };
+
+    // Listen for custom events (for same-tab updates)
+    const handleRoleChange = () => {
+      updateRole();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('roleChanged', handleRoleChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('roleChanged', handleRoleChange);
+    };
   }, []);
 
-  // Merge user data with localStorage role
-  const userWithRole = user ? { ...user, role: userRole } : user;
+  // Merge user data with localStorage role, but prioritize API role if it exists
+  const userWithRole = user ? { 
+    ...user, 
+    role: user?.role || userRole 
+  } : user;
 
   return {
     user: userWithRole,

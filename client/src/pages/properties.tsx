@@ -5,6 +5,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import Header from "@/components/layout/header";
+import AuthHeader from "@/components/layout/auth-header";
 import Footer from "@/components/layout/footer";
 import PropertyCard from "@/components/property/property-card";
 import PropertySearch from "@/components/property/property-search";
@@ -15,7 +16,7 @@ import { RoleBadge } from "@/components/ui/role-badge";
 
 export default function Properties() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [location] = useLocation();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
@@ -108,7 +109,7 @@ export default function Properties() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <RoleBadge />
+              <RoleBadge key={user?.role} />
             </div>
             <h1 className="text-3xl font-bold text-neutral-800 mb-4">Find Your Perfect Property</h1>
             <p className="text-lg text-neutral-600">Discover properties that match your lifestyle and budget</p>

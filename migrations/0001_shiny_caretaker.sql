@@ -1,0 +1,1 @@
+ALTER TABLE "properties" ADD COLUMN "needs_broker_services" boolean;

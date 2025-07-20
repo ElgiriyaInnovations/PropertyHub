@@ -58,7 +58,7 @@ export default function Home() {
           <div className="mb-8">
             {/* Role Badge */}
             <div className="mb-6">
-              <RoleBadge />
+              <RoleBadge key={user?.role} />
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">

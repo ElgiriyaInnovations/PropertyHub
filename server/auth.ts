@@ -122,19 +122,22 @@ export async function optionalJWT(req: Request, res: Response, next: NextFunctio
   }
 }
 
-// Role-based authorization middleware (now uses localStorage role from client)
+// Role-based authorization middleware
 export function authorize(roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = (req as any).user;
     
-    // Since roles are now managed in localStorage, we'll allow all authenticated users
-    // The client-side will handle role-based UI restrictions
     if (!user) {
       console.log('Authorization failed: No user found');
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    console.log('Authorization successful for user:', user.id);
+    // Get role from request headers (sent by client)
+    const userRole = req.headers['x-user-role'] as string;
+    
+    // For now, allow all authenticated users since role is managed client-side
+    // The client will handle role-based UI restrictions
+    console.log('Authorization successful for user:', user.id, 'with role:', userRole);
     next();
   };
 }

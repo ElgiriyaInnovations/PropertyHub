@@ -18,7 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, X, Upload, Home } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, X, Upload, Home, Users } from "lucide-react";
 import ImageUpload from "@/components/property/image-upload";
 import { RoleBadge } from "@/components/ui/role-badge";
 
@@ -29,6 +30,7 @@ const formSchema = clientPropertySchema.extend({
   squareFeet: z.string().optional(),
   images: z.array(z.string()).optional(),
   amenities: z.array(z.string()).optional(),
+  needsBrokerServices: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -41,6 +43,7 @@ export default function AddProperty() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [amenityInput, setAmenityInput] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [needsBrokerServices, setNeedsBrokerServices] = useState<boolean>(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -133,10 +136,19 @@ export default function AddProperty() {
     },
     onSuccess: (property) => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
-      toast({
-        title: "Property Created",
-        description: "Your property has been listed successfully",
-      });
+      
+      if (user?.role === "seller" && needsBrokerServices) {
+        toast({
+          title: "Property Listed with Broker Services",
+          description: "Your property has been listed successfully. Our brokers will contact you soon to discuss professional services.",
+        });
+      } else {
+        toast({
+          title: "Property Created",
+          description: "Your property has been listed successfully",
+        });
+      }
+      
       console.log('Redirecting to property detail page:', `/property/${property.id}`);
       setLocation(`/property/${property.id}`);
     },
@@ -184,6 +196,7 @@ export default function AddProperty() {
       squareFeet: data.squareFeet ? parseInt(data.squareFeet, 10) : null,
       images: imageUrls,
       amenities,
+      needsBrokerServices: user?.role === "seller" ? needsBrokerServices : null,
     };
 
     console.log('Final property data to submit:', propertyData);
@@ -212,7 +225,11 @@ export default function AddProperty() {
     );
   }
 
-  if (!isAuthenticated || user?.role === "buyer") {
+  if (!isAuthenticated) {
+    return null;
+  }
+  
+  if (user?.role === "buyer") {
     return null;
   }
 
@@ -222,9 +239,9 @@ export default function AddProperty() {
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="flex justify-center mb-4">
-            <RoleBadge />
-          </div>
+                      <div className="flex justify-center mb-4">
+              <RoleBadge key={user?.role} />
+            </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Add New Property</h1>
           <p className="text-lg text-neutral-600">Create a new property listing to attract potential buyers</p>
         </div>
@@ -469,6 +486,42 @@ export default function AddProperty() {
                   )}
                 </div>
 
+                {/* Broker Services Checkbox - Only for Sellers */}
+                {user?.role === "seller" && (
+                  <div className="space-y-4">
+                    <div className="border-t border-gray-200 pt-6">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="broker-services"
+                          checked={needsBrokerServices}
+                          onCheckedChange={(checked) => setNeedsBrokerServices(checked as boolean)}
+                        />
+                        <div className="space-y-2">
+                          <Label htmlFor="broker-services" className="text-base font-medium">
+                            I need professional broker services
+                          </Label>
+                          <p className="text-sm text-gray-600">
+                            Connect with experienced brokers for professional property valuation, marketing, 
+                            buyer screening, and negotiation support to sell your property faster and at the best price.
+                          </p>
+                          {needsBrokerServices && (
+                            <div className="bg-blue-50 p-3 rounded-lg mt-3">
+                              <h4 className="font-semibold text-blue-900 mb-2 text-sm">Broker Services Include:</h4>
+                              <ul className="text-xs text-blue-800 space-y-1">
+                                <li>• Professional property valuation and pricing</li>
+                                <li>• Marketing and advertising strategies</li>
+                                <li>• Buyer screening and qualification</li>
+                                <li>• Negotiation support and contract handling</li>
+                                <li>• Market analysis and timing advice</li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Submit Button */}
                 <div className="flex justify-end gap-4">
                   <Button 
@@ -498,6 +551,8 @@ export default function AddProperty() {
           </CardContent>
         </Card>
       </div>
+
+
 
       <Footer />
     </div>
