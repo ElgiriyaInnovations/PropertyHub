@@ -2,10 +2,10 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   res.status(200).json({
-    message: 'PropertyHub API is working!',
+    message: 'Hello from PropertyHub API!',
     timestamp: new Date().toISOString(),
     method: req.method,
     url: req.url,
-    path: req.url
+    headers: req.headers
   });
 } 

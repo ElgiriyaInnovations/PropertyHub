@@ -58,13 +58,61 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve static files for production (Vercel)
-  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
-    });
-  }
+  // Add a test endpoint to check if server is working
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Server is working!', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL
+  });
+});
+
+// Serve static files for production (Vercel)
+if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+  console.log('Setting up production static file serving...');
+  console.log('Current working directory:', process.cwd());
+      console.log('Static files path:', path.join(process.cwd(), 'dist', 'public'));
+  
+  // Serve static files from the dist/public directory (built React app)
+  app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
+  
+  // Catch-all handler for SPA routing
+  app.get('*', (req, res) => {
+    console.log('Handling request for:', req.path);
+    
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+      console.log('API route not found:', req.path);
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
+    
+          // For all other routes, serve index.html (SPA routing)
+      const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
+    console.log('Serving index.html from:', indexPath);
+    
+    // Check if the file exists
+    const fs = require('fs');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error('Error serving index.html:', err);
+          res.status(500).json({ message: 'Internal server error', error: err.message });
+        } else {
+          console.log('Successfully served index.html');
+        }
+      });
+    } else {
+      console.error('index.html not found at:', indexPath);
+      res.status(404).json({ 
+        message: 'Static files not found', 
+        path: indexPath,
+        cwd: process.cwd(),
+        files: fs.readdirSync(process.cwd())
+      });
+    }
+  });
+}
 
   // Only start the server if not in Vercel environment
   if (!process.env.VERCEL) {
