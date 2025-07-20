@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Building2, LogOut, User } from "lucide-react";
+import { Home, LogOut, User } from "lucide-react";
 import { Link } from "wouter";
 import {
   DropdownMenu,
@@ -47,7 +47,7 @@ export default function AuthHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center">
-            <Building2 className="h-8 w-8 text-primary mr-2" />
+            <Home className="h-8 w-8 text-primary mr-2" />
             <h1 className="text-2xl font-bold text-primary">PropertyHub</h1>
           </Link>
 

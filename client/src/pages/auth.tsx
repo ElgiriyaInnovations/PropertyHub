@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Building2 } from "lucide-react";
+import { Loader2, Home } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -128,7 +128,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Building2 className="h-8 w-8 text-primary" />
+            <Home className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-primary">PropertyHub</CardTitle>
           <CardDescription>
