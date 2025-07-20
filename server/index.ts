@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -58,7 +59,7 @@ app.use((req, res, next) => {
   }
 
   // Serve static files for production (Vercel)
-  if (process.env.VERCEL) {
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
