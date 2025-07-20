@@ -6,6 +6,7 @@ import multer from "multer";
 import fs from "fs/promises";
 import path from "path";
 import { storage } from "./storage";
+import { S3Service } from "./s3";
 import { 
   authenticateJWT, 
   optionalJWT,
@@ -23,25 +24,9 @@ import { insertPropertySchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
 
-// Configure multer for file uploads
-const storage_multer = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'properties');
-    try {
-      await fs.mkdir(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    } catch (error) {
-      cb(error as Error, '');
-    }
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure multer for file uploads (memory storage for S3)
 const upload = multer({
-  storage: storage_multer,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -73,8 +58,6 @@ const refreshTokenSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve uploaded files
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Auth routes with rate limiting
   app.post('/api/auth/register', authLimiter, async (req, res) => {
@@ -324,10 +307,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No images uploaded" });
       }
 
-      const imageUrls = (req.files as Express.Multer.File[]).map(file => {
-        console.log('Processing file:', file.filename, 'size:', file.size);
-        return `/uploads/properties/${file.filename}`;
+      const uploadPromises = (req.files as Express.Multer.File[]).map(async (file) => {
+        console.log('Processing file:', file.originalname, 'size:', file.size);
+        try {
+          const result = await S3Service.uploadFile(file, 'properties');
+          console.log('S3 upload successful:', result.url);
+          return result.url;
+        } catch (error) {
+          console.error('S3 upload failed for file:', file.originalname, error);
+          throw error;
+        }
       });
+
+      const imageUrls = await Promise.all(uploadPromises);
 
       console.log('Generated image URLs:', imageUrls);
       console.log('=== UPLOAD REQUEST END ===');
@@ -347,14 +339,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Image URL is required" });
       }
 
-      // Extract filename from URL
-      const filename = path.basename(imageUrl);
-      const filePath = path.join(process.cwd(), 'uploads', 'properties', filename);
+      // Extract S3 key from URL
+      const key = S3Service.extractKeyFromUrl(imageUrl);
+      
+      if (!key) {
+        return res.status(400).json({ message: "Invalid image URL" });
+      }
 
       try {
-        await fs.unlink(filePath);
+        await S3Service.deleteFile(key);
         res.json({ message: "Image deleted successfully" });
       } catch (error) {
+        console.error('S3 delete error:', error);
         // File might not exist, but that's okay
         res.json({ message: "Image deleted successfully" });
       }
