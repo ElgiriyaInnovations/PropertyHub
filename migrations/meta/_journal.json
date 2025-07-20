@@ -1,19 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1752895650725,
-      "tag": "0000_magical_ted_forrester",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1753013019915,
-      "tag": "0001_shiny_caretaker",
+      "version": "6",
+      "when": 1753040924605,
+      "tag": "0000_yellow_rafael_vega",
       "breakpoints": true
     }
   ]

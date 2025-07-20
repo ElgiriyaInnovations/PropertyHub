@@ -1,109 +1,104 @@
 import {
-  pgTable,
+  sqliteTable,
   text,
-  varchar,
-  timestamp,
-  jsonb,
-  index,
-  serial,
   integer,
-  decimal,
-  boolean,
-  uuid,
-} from "drizzle-orm/pg-core";
+  real,
+  blob,
+  index,
+} from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table (required for Replit Auth)
-export const sessions = pgTable(
+export const sessions = sqliteTable(
   "sessions",
   {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
+    sid: text("sid").primaryKey(),
+    sess: blob("sess").notNull(),
+    expire: integer("expire", { mode: 'timestamp' }).notNull(),
   },
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
 // User storage table with JWT authentication
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique().notNull(),
-  password: varchar("password"), // for local auth
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  phone: varchar("phone"),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().notNull(),
+  email: text("email").unique().notNull(),
+  password: text("password"), // for local auth
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
+  phone: text("phone"),
   bio: text("bio"),
   // SSO fields
-  googleId: varchar("google_id").unique(),
-  githubId: varchar("github_id").unique(),
-  linkedinId: varchar("linkedin_id").unique(),
+  googleId: text("google_id").unique(),
+  githubId: text("github_id").unique(),
+  linkedinId: text("linkedin_id").unique(),
   // JWT refresh tokens
-  refreshToken: varchar("refresh_token"),
-  refreshTokenExpiry: timestamp("refresh_token_expiry"),
-  emailVerified: boolean("email_verified").default(false),
-  resetPasswordToken: varchar("reset_password_token"),
-  resetPasswordExpiry: timestamp("reset_password_expiry"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  refreshToken: text("refresh_token"),
+  refreshTokenExpiry: integer("refresh_token_expiry", { mode: 'timestamp' }),
+  emailVerified: integer("email_verified", { mode: 'boolean' }).default(false),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpiry: integer("reset_password_expiry", { mode: 'timestamp' }),
+  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
 });
 
 // Properties table
-export const properties = pgTable("properties", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
+export const properties = sqliteTable("properties", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
   description: text("description"),
-  price: decimal("price", { precision: 12, scale: 2 }).notNull().$type<string>(),
-  propertyType: varchar("property_type", { 
+  price: real("price").notNull(),
+  propertyType: text("property_type", { 
     enum: ["house", "apartment", "condo", "townhouse", "land", "commercial"] 
   }).notNull(),
-  status: varchar("status", { 
+  status: text("status", { 
     enum: ["active", "pending", "sold", "rented"] 
   }).notNull().default("active"),
   bedrooms: integer("bedrooms"),
   bathrooms: integer("bathrooms"),
   squareFeet: integer("square_feet"),
-  address: varchar("address", { length: 500 }).notNull(),
-  city: varchar("city", { length: 100 }).notNull(),
-  state: varchar("state", { length: 50 }).notNull(),
-  zipCode: varchar("zip_code", { length: 10 }).notNull(),
-  latitude: decimal("latitude", { precision: 10, scale: 8 }),
-  longitude: decimal("longitude", { precision: 11, scale: 8 }),
-  images: jsonb("images").$type<string[]>().default([]),
-  amenities: jsonb("amenities").$type<string[]>().default([]),
-  needsBrokerServices: boolean("needs_broker_services"),
-  ownerId: varchar("owner_id").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  images: blob("images", { mode: 'json' }).$type<string[]>().default([]),
+  amenities: blob("amenities", { mode: 'json' }).$type<string[]>().default([]),
+  needsBrokerServices: integer("needs_broker_services", { mode: 'boolean' }),
+  ownerId: text("owner_id").references(() => users.id).notNull(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
 });
 
 // Property inquiries/favorites
-export const propertyFavorites = pgTable("property_favorites", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+export const propertyFavorites = sqliteTable("property_favorites", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").references(() => users.id).notNull(),
   propertyId: integer("property_id").references(() => properties.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
 });
 
 // Messages/conversations
-export const conversations = pgTable("conversations", {
-  id: serial("id").primaryKey(),
-  participant1Id: varchar("participant1_id").references(() => users.id).notNull(),
-  participant2Id: varchar("participant2_id").references(() => users.id).notNull(),
+export const conversations = sqliteTable("conversations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  participant1Id: text("participant1_id").references(() => users.id).notNull(),
+  participant2Id: text("participant2_id").references(() => users.id).notNull(),
   propertyId: integer("property_id").references(() => properties.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
 });
 
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
+export const messages = sqliteTable("messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   conversationId: integer("conversation_id").references(() => conversations.id).notNull(),
-  senderId: varchar("sender_id").references(() => users.id).notNull(),
+  senderId: text("sender_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
-  isRead: boolean("is_read").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  isRead: integer("is_read", { mode: 'boolean' }).default(false),
+  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
 });
 
 // Relations
