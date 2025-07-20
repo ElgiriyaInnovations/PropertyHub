@@ -617,8 +617,8 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <Home className="h-6 w-6 text-primary mr-2" />
-                <h3 className="text-xl font-bold">PropertyHub</h3>
+                <Home className="h-8 w-8 text-primary mr-2" />
+                <h3 className="text-2xl font-bold text-primary">PropertyHub</h3>
               </div>
               <p className="text-neutral-400 mb-4">Your trusted platform for connecting buyers, sellers, and brokers in the real estate market.</p>
             </div>

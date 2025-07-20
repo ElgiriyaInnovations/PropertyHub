@@ -128,9 +128,9 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+            <Building2 className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">PropertyHub</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">PropertyHub</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
           </CardDescription>

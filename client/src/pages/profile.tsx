@@ -16,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, Settings, LogOut, Phone, Mail, MapPin } from "lucide-react";
 
@@ -117,31 +116,7 @@ export default function Profile() {
     window.location.href = "/api/logout";
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "buyer":
-        return "bg-blue-100 text-blue-800";
-      case "seller":
-        return "bg-green-100 text-green-800";
-      case "broker":
-        return "bg-purple-100 text-purple-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
-  const getRoleDescription = (role: string) => {
-    switch (role) {
-      case "buyer":
-        return "Looking for properties to purchase or rent";
-      case "seller":
-        return "Listing properties for sale or rent";
-      case "broker":
-        return "Professional real estate agent helping clients";
-      default:
-        return "";
-    }
-  };
 
   if (isLoading) {
     return (
@@ -182,14 +157,6 @@ export default function Profile() {
                 </h2>
                 
                 <p className="text-neutral-600 mb-3">{user?.email}</p>
-                
-                <Badge className={`mb-4 ${getRoleColor(user?.role || "buyer")}`}>
-                  {user?.role?.charAt(0).toUpperCase()}{user?.role?.slice(1)}
-                </Badge>
-                
-                <p className="text-sm text-neutral-500 mb-6">
-                  {getRoleDescription(user?.role || "buyer")}
-                </p>
                 
                 <p className="text-xs text-neutral-400 mb-6">
                   💡 You can switch your role anytime from the navigation bar
@@ -275,19 +242,7 @@ export default function Profile() {
                       </p>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-1">
-                        Role
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Badge className={getRoleColor(user?.role || "buyer")}>
-                          {user?.role?.charAt(0).toUpperCase()}{user?.role?.slice(1)}
-                        </Badge>
-                        <span className="text-neutral-600 text-sm">
-                          {getRoleDescription(user?.role || "buyer")}
-                        </span>
-                      </div>
-                    </div>
+
 
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-1">
