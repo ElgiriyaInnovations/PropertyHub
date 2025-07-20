@@ -11,6 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Search, Users } from "lucide-react";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 export default function Messages() {
   const { toast } = useToast();
@@ -110,6 +111,9 @@ export default function Messages() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
+          <div className="flex justify-center mb-4">
+            <RoleBadge />
+          </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Messages</h1>
           <p className="text-lg text-neutral-600">Connect with buyers, sellers, and brokers</p>
         </div>

@@ -27,6 +27,7 @@ import {
   Camera,
   MapIcon
 } from "lucide-react";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -264,6 +265,11 @@ export default function PropertyDetail() {
               Back to Properties
             </Button>
           </Link>
+        </div>
+
+        {/* Role Badge */}
+        <div className="flex justify-center mb-6">
+          <RoleBadge />
         </div>
 
         {/* Image Gallery */}

@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, X, Upload, Home } from "lucide-react";
 import ImageUpload from "@/components/property/image-upload";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 const formSchema = clientPropertySchema.extend({
   price: z.string().min(1, "Price is required"),
@@ -221,6 +222,9 @@ export default function AddProperty() {
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
+          <div className="flex justify-center mb-4">
+            <RoleBadge />
+          </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Add New Property</h1>
           <p className="text-lg text-neutral-600">Create a new property listing to attract potential buyers</p>
         </div>

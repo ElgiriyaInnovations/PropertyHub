@@ -6,6 +6,7 @@ import AuthHeader from "@/components/layout/auth-header";
 import Footer from "@/components/layout/footer";
 import { TrendingUp, TrendingDown, DollarSign, Home, Activity, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 export default function MarketInsights() {
   const { user } = useAuth();
@@ -49,6 +50,9 @@ export default function MarketInsights() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
+          <div className="flex justify-center mb-4">
+            <RoleBadge />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Market Insights</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
             Real-time market analytics and trends for informed property decisions

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { Home as HomeIcon, Search, Plus, ArrowRight } from "lucide-react";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 export default function Home() {
   const { toast } = useToast();
@@ -57,18 +58,7 @@ export default function Home() {
           <div className="mb-8">
             {/* Role Badge */}
             <div className="mb-6">
-              <Badge 
-                variant="secondary" 
-                className={`text-sm px-4 py-2 ${
-                  user?.role === 'buyer' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                  user?.role === 'seller' ? 'bg-green-100 text-green-800 border-green-200' :
-                  'bg-purple-100 text-purple-800 border-purple-200'
-                }`}
-              >
-                {user?.role === 'buyer' && '🏠 Buyer'}
-                {user?.role === 'seller' && '📋 Seller'}
-                {user?.role === 'broker' && '👔 Broker'}
-              </Badge>
+              <RoleBadge />
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
