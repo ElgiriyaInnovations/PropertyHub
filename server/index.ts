@@ -57,6 +57,14 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
+  // Serve static files for production (Vercel)
+  if (process.env.VERCEL) {
+    app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
+    });
+  }
+
   // Only start the server if not in Vercel environment
   if (!process.env.VERCEL) {
     // Serve the app on port 3000 for local development

@@ -4,13 +4,6 @@
     {
       "src": "api/[...path].ts",
       "use": "@vercel/node"
-    },
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
     }
   ],
   "routes": [
@@ -20,14 +13,9 @@
     },
     {
       "src": "/(.*)",
-      "dest": "dist/public/$1"
+      "dest": "/api/[...path]"
     }
   ],
-  "functions": {
-    "api/[...path].ts": {
-      "maxDuration": 30
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   }

@@ -215,3 +215,4 @@ uploads/
 # Backup files
 *.bak
 *.backup
+.vercel
