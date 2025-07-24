@@ -23,7 +23,7 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().optional(),
+  phone: z.string().min(1, "Phone number is required").regex(/^[\+]?[\d\s\-\(\)]{10,15}$/, "Please enter a valid phone number (10-15 digits)"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -98,6 +98,8 @@ export default function Auth() {
         title: "Registration Successful",
         description: "Account created! You'll start as a Buyer and can switch roles anytime.",
       });
+      // Set default role as buyer
+      localStorage.setItem('userRole', 'buyer');
       // Switch to login tab instead of auto-login
       setActiveTab("login");
       // Pre-fill the login form with the registered email
@@ -254,13 +256,21 @@ export default function Auth() {
 
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Label htmlFor="phone">Phone Number *</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Your phone number"
+                    placeholder="Enter your phone number (e.g., +1-234-567-8900)"
                     {...registerForm.register("phone")}
                   />
+                  {registerForm.formState.errors.phone && (
+                    <p className="text-sm text-red-600">
+                      {registerForm.formState.errors.phone.message}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Enter your home or mobile phone number. This will be visible to potential buyers and brokers.
+                  </p>
                 </div>
 
                 <Button 

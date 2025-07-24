@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Home, Bed, DollarSign } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Search, MapPin, Home, Bed, Handshake } from "lucide-react";
 
 interface SearchFilters {
   location: string;
   propertyType: string;
   priceRange: string;
   bedrooms: string;
+  needsBrokerServices: boolean;
 }
 
 // Helper functions defined outside component
@@ -35,6 +39,7 @@ const getPriceRangeFromParams = (searchParams: URLSearchParams): string | null =
 export default function PropertySearch() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { currentRole } = useRoleSwitch();
   
   // Initialize filters from URL parameters to persist state
   const initializeFilters = (): SearchFilters => {
@@ -44,6 +49,7 @@ export default function PropertySearch() {
       propertyType: searchParams.get('propertyType') || "all",
       priceRange: getPriceRangeFromParams(searchParams) || "any",
       bedrooms: searchParams.get('minBedrooms') || "any",
+      needsBrokerServices: searchParams.get('needsBrokerServices') === 'true',
     };
   };
   
@@ -85,6 +91,12 @@ export default function PropertySearch() {
     if (filters.bedrooms && filters.bedrooms.trim() && filters.bedrooms !== "any") {
       searchParams.set("minBedrooms", filters.bedrooms);
       console.log("Adding minBedrooms filter:", filters.bedrooms);
+    }
+    
+    // Broker Services (for buyers who want to see properties needing broker services)
+    if (currentRole === 'buyer' && filters.needsBrokerServices) {
+      searchParams.set("needsBrokerServices", "true");
+      console.log("Adding needsBrokerServices filter: true");
     }
 
     console.log("Final search params:", Object.fromEntries(searchParams));
@@ -163,7 +175,7 @@ export default function PropertySearch() {
         {/* Price Range */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-neutral-700 flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
+            <span className="text-sm font-bold">LKR</span>
             Price Range
           </label>
           <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
@@ -209,6 +221,26 @@ export default function PropertySearch() {
           Search
         </Button>
       </div>
+      
+      {/* Broker Services Filter - Only show for buyers (brokers see filtered results automatically) */}
+      {currentRole === 'buyer' && (
+        <div className="mt-4 pt-4 border-t border-neutral-200">
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              id="broker-services-filter"
+              checked={filters.needsBrokerServices}
+              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, needsBrokerServices: checked as boolean }))}
+            />
+            <Label htmlFor="broker-services-filter" className="text-sm font-medium text-neutral-700 flex items-center gap-2">
+              <Handshake className="h-4 w-4" />
+              Show only properties that need broker services
+            </Label>
+          </div>
+          <p className="text-xs text-neutral-500 mt-1 ml-6">
+            Find properties where sellers are looking for professional broker assistance
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -41,6 +41,13 @@ export default function PropertyDetail() {
 
   const propertyId = params.id as string;
 
+  // Update isFavorite state when favoriteStatus changes
+  useEffect(() => {
+    if (favoriteStatus) {
+      setIsFavorite(favoriteStatus.isFavorited);
+    }
+  }, [favoriteStatus]);
+
   // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -62,28 +69,31 @@ export default function PropertyDetail() {
     enabled: !!propertyId,
   });
 
-  const { data: isFavorited } = useQuery({
+  const { data: favoriteStatus } = useQuery({
     queryKey: ["/api/favorites", propertyId],
-    queryFn: () => apiRequest(`/api/favorites/${propertyId}`),
+    queryFn: async () => {
+      if (!isAuthenticated || currentRole !== "buyer") return { isFavorited: false };
+      const response = await fetch(`/api/favorites/${propertyId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return { isFavorited: false };
+      return response.json();
+    },
     enabled: isAuthenticated && currentRole === "buyer",
   });
 
   const favoriteMutation = useMutation({
     mutationFn: async (action: 'add' | 'remove') => {
-      if (action === 'add') {
-        return apiRequest('/api/favorites', {
-          method: 'POST',
-          body: JSON.stringify({ propertyId }),
-        });
-      } else {
-        return apiRequest(`/api/favorites/${propertyId}`, {
-          method: 'DELETE',
-        });
-      }
+      const endpoint = `/api/favorites/${propertyId}`;
+      const method = action === 'add' ? 'POST' : 'DELETE';
+      
+      return apiRequest(endpoint, {
+        method,
+      });
     },
     onSuccess: (_, action) => {
       setIsFavorite(action === 'add');
-      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites", propertyId] });
       
       toast({
         title: action === 'add' ? "Added to Favorites" : "Removed from Favorites",
@@ -173,9 +183,9 @@ export default function PropertyDetail() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-LK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'LKR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -292,7 +302,15 @@ export default function PropertyDetail() {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+                    {isFavorite && currentRole === "buyer" && (
+                      <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 font-medium shadow-md">
+                        <Heart className="h-3 w-3 mr-1 fill-current" />
+                        Favorited
+                      </Badge>
+                    )}
+                  </div>
                   <Badge className={getStatusColor(property.status)}>
                     {property.status === 'active' ? 'For Sale' : property.status}
                   </Badge>
@@ -335,10 +353,23 @@ export default function PropertyDetail() {
                     onClick={handleFavorite}
                     disabled={favoriteMutation.isPending}
                     variant={isFavorite ? "default" : "outline"}
-                    className="flex-1"
+                    className={`flex-1 transition-all duration-300 ${
+                      isFavorite 
+                        ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md' 
+                        : 'hover:border-red-300 hover:text-red-600'
+                    }`}
                   >
-                    <Heart className={`h-4 w-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
-                    {favoriteMutation.isPending ? 'Updating...' : (isFavorite ? 'Saved' : 'Save')}
+                    {favoriteMutation.isPending ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Heart className={`h-4 w-4 mr-2 transition-all duration-300 ${isFavorite ? 'fill-current' : ''}`} />
+                        <span className="font-medium">{isFavorite ? 'Saved' : 'Save'}</span>
+                      </>
+                    )}
                   </Button>
                 )}
                 

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AuthHeader from "@/components/layout/auth-header";
 import Footer from "@/components/layout/footer";
-import { TrendingUp, TrendingDown, DollarSign, Home, Activity, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Home, Activity, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { RoleBadge } from "@/components/ui/role-badge";
@@ -66,7 +66,7 @@ export default function MarketInsights() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average Price</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-bold text-muted-foreground">LKR</span>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">LKR {data.averagePrice.toLocaleString()}</div>

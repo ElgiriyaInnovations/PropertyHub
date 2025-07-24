@@ -15,7 +15,7 @@ import {
   type PropertyFavorite,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, ilike, gte, lte, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, gte, lte, sql, leftJoin } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (JWT Auth)
@@ -36,6 +36,7 @@ export interface IStorage {
     minBedrooms?: number;
     status?: string;
     ownerId?: string;
+    needsBrokerServices?: boolean;
   }): Promise<Property[]>;
   getProperty(id: number): Promise<Property | undefined>;
   createProperty(property: InsertProperty): Promise<Property>;
@@ -46,6 +47,7 @@ export interface IStorage {
   addFavorite(userId: string, propertyId: number): Promise<PropertyFavorite>;
   removeFavorite(userId: string, propertyId: number): Promise<void>;
   getUserFavorites(userId: string): Promise<Property[]>;
+  isPropertyFavorited(userId: string, propertyId: number): Promise<boolean>;
 
   // Messaging
   getOrCreateConversation(participant1Id: string, participant2Id: string, propertyId?: number): Promise<Conversation>;
@@ -114,10 +116,41 @@ export class DatabaseStorage implements IStorage {
     minBedrooms?: number;
     status?: string;
     ownerId?: string;
+    needsBrokerServices?: boolean;
   }): Promise<Property[]> {
     console.log("Storage getProperties called with filters:", filters);
     
-    let query = db.select().from(properties);
+    let query = db.select({
+      id: properties.id,
+      title: properties.title,
+      description: properties.description,
+      price: properties.price,
+      propertyType: properties.propertyType,
+      status: properties.status,
+      bedrooms: properties.bedrooms,
+      bathrooms: properties.bathrooms,
+      squareFeet: properties.squareFeet,
+      address: properties.address,
+      city: properties.city,
+      state: properties.state,
+      zipCode: properties.zipCode,
+      latitude: properties.latitude,
+      longitude: properties.longitude,
+      images: properties.images,
+      amenities: properties.amenities,
+      needsBrokerServices: properties.needsBrokerServices,
+      ownerId: properties.ownerId,
+      createdAt: properties.createdAt,
+      updatedAt: properties.updatedAt,
+      owner: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
+        profileImageUrl: users.profileImageUrl,
+      }
+    }).from(properties).leftJoin(users, eq(properties.ownerId, users.id));
 
     const conditions = [];
 
@@ -171,7 +204,12 @@ export class DatabaseStorage implements IStorage {
       }
       if (filters.ownerId) {
         console.log("Adding ownerId filter:", filters.ownerId);
+        console.log("OwnerId filter type:", typeof filters.ownerId);
         conditions.push(eq(properties.ownerId, filters.ownerId));
+      }
+      if (filters.needsBrokerServices !== undefined) {
+        console.log("Adding needsBrokerServices filter:", filters.needsBrokerServices);
+        conditions.push(eq(properties.needsBrokerServices, filters.needsBrokerServices));
       }
     }
 
@@ -188,21 +226,92 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProperty(id: number): Promise<Property | undefined> {
-    const [property] = await db.select().from(properties).where(eq(properties.id, id));
+    const [property] = await db.select({
+      id: properties.id,
+      title: properties.title,
+      description: properties.description,
+      price: properties.price,
+      propertyType: properties.propertyType,
+      status: properties.status,
+      bedrooms: properties.bedrooms,
+      bathrooms: properties.bathrooms,
+      squareFeet: properties.squareFeet,
+      address: properties.address,
+      city: properties.city,
+      state: properties.state,
+      zipCode: properties.zipCode,
+      latitude: properties.latitude,
+      longitude: properties.longitude,
+      images: properties.images,
+      amenities: properties.amenities,
+      needsBrokerServices: properties.needsBrokerServices,
+      ownerId: properties.ownerId,
+      createdAt: properties.createdAt,
+      updatedAt: properties.updatedAt,
+      owner: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
+        profileImageUrl: users.profileImageUrl,
+      }
+    }).from(properties).leftJoin(users, eq(properties.ownerId, users.id)).where(eq(properties.id, id));
     return property;
   }
 
   async createProperty(property: InsertProperty): Promise<Property> {
-    console.log('Storage: Creating property with data:', JSON.stringify(property, null, 2));
-    console.log('Owner ID in storage:', property.ownerId);
-    
-    const [newProperty] = await db
-      .insert(properties)
-      .values(property as any)
-      .returning();
+    try {
+      console.log('Storage: Creating property with data:', JSON.stringify(property, null, 2));
+      console.log('Owner ID in storage:', property.ownerId);
+      console.log('Property type:', typeof property);
+      console.log('Database connection status:', !!db);
       
-    console.log('Storage: Property created successfully:', newProperty.id);
-    return newProperty;
+      // Validate required fields
+      if (!property.title || !property.price || !property.propertyType || !property.address || !property.city || !property.state || !property.zipCode || !property.ownerId) {
+        throw new Error(`Missing required fields: ${JSON.stringify({
+          title: !!property.title,
+          price: !!property.price,
+          propertyType: !!property.propertyType,
+          address: !!property.address,
+          city: !!property.city,
+          state: !!property.state,
+          zipCode: !!property.zipCode,
+          ownerId: !!property.ownerId
+        })}`);
+      }
+      
+      console.log('About to insert into database...');
+      console.log('Database object:', typeof db);
+      console.log('Properties table:', properties);
+      
+      try {
+        const [newProperty] = await db
+          .insert(properties)
+          .values(property as any)
+          .returning();
+          
+        console.log('Storage: Property created successfully:', newProperty.id);
+        console.log('Created property data:', JSON.stringify(newProperty, null, 2));
+        return newProperty;
+      } catch (dbError) {
+        console.error('Database insert error:', dbError);
+        console.error('Error details:', {
+          name: dbError instanceof Error ? dbError.name : 'Unknown',
+          message: dbError instanceof Error ? dbError.message : 'Unknown',
+          stack: dbError instanceof Error ? dbError.stack : 'Unknown'
+        });
+        throw dbError;
+      }
+    } catch (error) {
+      console.error('Storage: Error creating property:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown',
+        stack: error instanceof Error ? error.stack : 'Unknown'
+      });
+      throw error;
+    }
   }
 
   async updateProperty(id: number, property: Partial<InsertProperty>): Promise<Property> {
@@ -220,6 +329,16 @@ export class DatabaseStorage implements IStorage {
 
   // Favorites
   async addFavorite(userId: string, propertyId: number): Promise<PropertyFavorite> {
+    // Check if favorite already exists
+    const [existing] = await db
+      .select()
+      .from(propertyFavorites)
+      .where(and(eq(propertyFavorites.userId, userId), eq(propertyFavorites.propertyId, propertyId)));
+
+    if (existing) {
+      return existing; // Return existing favorite if already added
+    }
+
     const [favorite] = await db
       .insert(propertyFavorites)
       .values({ userId, propertyId })
@@ -261,6 +380,15 @@ export class DatabaseStorage implements IStorage {
       .from(propertyFavorites)
       .innerJoin(properties, eq(propertyFavorites.propertyId, properties.id))
       .where(eq(propertyFavorites.userId, userId));
+  }
+
+  async isPropertyFavorited(userId: string, propertyId: number): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(propertyFavorites)
+      .where(and(eq(propertyFavorites.userId, userId), eq(propertyFavorites.propertyId, propertyId)));
+    
+    return !!favorite;
   }
 
   // Messaging

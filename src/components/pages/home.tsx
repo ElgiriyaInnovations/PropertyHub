@@ -36,6 +36,17 @@ export default function Home() {
 
   const { data: featuredProperties, isLoading: propertiesLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", { limit: 2 }],
+    queryFn: async () => {
+      const response = await fetch('/api/properties?limit=2', {
+        credentials: 'include', // Include cookies for authentication
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
     retry: false,
   });
 

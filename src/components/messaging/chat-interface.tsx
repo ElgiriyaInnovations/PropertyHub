@@ -194,7 +194,7 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
                   {conversation.property.title}
                 </p>
                 <p className="text-sm text-neutral-600">
-                  ${parseFloat(conversation.property.price).toLocaleString()}
+                  LKR {parseFloat(conversation.property.price).toLocaleString()}
                 </p>
               </div>
               <Link href={`/property/${conversation.property.id}`} className="inline-flex items-center justify-center p-2 border border-gray-300 rounded-md hover:bg-gray-50">

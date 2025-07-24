@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export function useRoleSwitch() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentRole, setCurrentRole] = useState<"buyer" | "seller" | "broker" | undefined>(undefined);
 
@@ -23,6 +25,25 @@ export function useRoleSwitch() {
       }
     }
   }, [user?.id]); // Re-run when user changes
+
+  // Navigate to role-specific homepage on initial load if user is authenticated
+  useEffect(() => {
+    if (user && currentRole && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      const roleHomepages = {
+        buyer: "/",
+        seller: "/properties",
+        broker: "/properties"
+      };
+      
+      // Only navigate if we're not already on the correct homepage
+      const expectedHomepage = roleHomepages[currentRole];
+      if (currentPath !== expectedHomepage && 
+          (currentPath === "/" || currentPath === "/properties")) {
+        router.push(expectedHomepage);
+      }
+    }
+  }, [user, currentRole, router]);
 
   const switchRole = async (newRole: "buyer" | "seller" | "broker") => {
     if (newRole === currentRole) return;
@@ -52,6 +73,17 @@ export function useRoleSwitch() {
         title: "Role Updated",
         description: `You are now a ${roleLabels[newRole]}`,
       });
+
+      // Navigate to role-specific homepage
+      const roleHomepages = {
+        buyer: "/", // Main homepage for buyers
+        seller: "/properties", // Properties page showing seller's listings
+        broker: "/properties" // Properties page for brokers
+      };
+      
+      // Navigate to the appropriate homepage for the new role
+      router.push(roleHomepages[newRole]);
+      
     } catch (error) {
       console.error("Error updating role:", error);
       toast({

@@ -49,6 +49,7 @@ export interface Property {
     firstName?: string;
     lastName?: string;
     email: string;
+    phone?: string;
     profileImageUrl?: string;
     role?: string;
   };

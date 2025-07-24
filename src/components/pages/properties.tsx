@@ -36,6 +36,21 @@ export default function Properties() {
   // Always include status filter
   urlFilters.status = 'active';
   
+  // If user is in seller mode, only show their properties
+  if (currentRole === 'seller' && user?.id) {
+    urlFilters.ownerId = user.id;
+    console.log("Seller mode: filtering by owner ID:", user.id);
+    console.log("Current user object:", user);
+  } 
+  // If user is in broker mode, only show properties that need broker services
+  else if (currentRole === 'broker') {
+    urlFilters.needsBrokerServices = 'true';
+    console.log("Broker mode: filtering by needsBrokerServices: true");
+  }
+  else {
+    console.log("Not in seller mode or no user ID. Current role:", currentRole, "User ID:", user?.id);
+  }
+  
   console.log("Properties page - final filters to send:", urlFilters);
 
   // Redirect to home if not authenticated
@@ -55,6 +70,24 @@ export default function Properties() {
 
   const { data: properties, isLoading: propertiesLoading, error } = useQuery({
     queryKey: ["/api/properties", urlFilters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(urlFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+      
+      const response = await fetch(`/api/properties?${params.toString()}`, {
+        credentials: 'include', // Include cookies for authentication
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
     retry: false,
     refetchOnWindowFocus: false, // Prevent auto-refetch on focus
   });
@@ -99,15 +132,43 @@ export default function Properties() {
       {/* Hero Section with Search */}
       <section className="bg-white shadow-sm py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Role indicator for sellers and brokers */}
+          {currentRole === 'seller' && (
+            <div className="flex justify-center mb-4">
+              <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                <span className="mr-2">📋</span>
+                Seller Dashboard - Viewing Your Listings
+              </div>
+            </div>
+          )}
+          {currentRole === 'broker' && (
+            <div className="flex justify-center mb-4">
+              <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                <span className="mr-2">👔</span>
+                Broker Dashboard - Properties Needing Broker Services
+              </div>
+            </div>
+          )}
           <LandingImage
-            title="Find Your Perfect Property"
-            subtitle="Discover properties that match your lifestyle and budget"
+            title={
+              currentRole === 'seller' ? "My Property Listings" : 
+              currentRole === 'broker' ? "Properties Needing Broker Services" :
+              "Find Your Perfect Property"
+            }
+            subtitle={
+              currentRole === 'seller' 
+                ? "Manage and view all your property listings" 
+                : currentRole === 'broker'
+                ? "Connect with sellers who need professional broker assistance"
+                : "Discover properties that match your lifestyle and budget"
+            }
             role={currentRole}
             showBackground={false}
             className="py-8"
           />
           
-          <PropertySearch />
+          {/* Only show search for buyers, not for sellers or brokers viewing filtered properties */}
+          {currentRole === 'buyer' && <PropertySearch />}
         </div>
       </section>
 
@@ -119,11 +180,27 @@ export default function Properties() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <span className="text-sm text-neutral-600">
-                  {Array.isArray(properties) ? properties.length : 0} properties found
+                  {currentRole === 'seller' 
+                    ? `${Array.isArray(properties) ? properties.length : 0} of your properties listed`
+                    : currentRole === 'broker'
+                    ? `${Array.isArray(properties) ? properties.length : 0} properties needing broker services`
+                    : `${Array.isArray(properties) ? properties.length : 0} properties found`
+                  }
                 </span>
               </div>
               
               <div className="flex items-center gap-2">
+                {/* Add Property button for sellers */}
+                {currentRole === 'seller' && (
+                  <Button
+                    onClick={() => window.location.href = '/add-property'}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    size="sm"
+                  >
+                    + Add Property
+                  </Button>
+                )}
+                
                 <Button
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="sm"
@@ -165,10 +242,27 @@ export default function Properties() {
           ) : (
             <div className="text-center py-12">
               <Filter className="h-16 w-16 text-neutral-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-neutral-600 mb-2">No properties found</h3>
+              <h3 className="text-xl font-semibold text-neutral-600 mb-2">
+                {currentRole === 'seller' ? 'No properties listed yet' : 
+                 currentRole === 'broker' ? 'No properties needing broker services' :
+                 'No properties found'}
+              </h3>
               <p className="text-neutral-500 mb-6">
-                Try adjusting your search criteria to find more properties.
+                {currentRole === 'seller' 
+                  ? 'Start by adding your first property listing to attract potential buyers.'
+                  : currentRole === 'broker'
+                  ? 'Currently no properties are requesting broker services. Check back later for new opportunities.'
+                  : 'Try adjusting your search criteria to find more properties.'
+                }
               </p>
+              {currentRole === 'seller' && (
+                <Button 
+                  onClick={() => window.location.href = '/add-property'}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Add Your First Property
+                </Button>
+              )}
             </div>
           )}
         </div>

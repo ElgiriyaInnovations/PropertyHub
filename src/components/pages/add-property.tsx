@@ -98,15 +98,12 @@ export default function AddProperty() {
       console.log('=== MUTATION FUNCTION CALLED ===');
       console.log('Mutation data received:', data);
       try {
-        const token = localStorage.getItem('accessToken');
-        console.log('Making API request with token:', token ? 'Present' : 'Missing');
-        
         const response = await fetch('/api/properties', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify(data),
         });
 
@@ -119,8 +116,6 @@ export default function AddProperty() {
           
           // Check for token expiration
           if (response.status === 401) {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
             window.location.href = '/auth';
             return;
           }
@@ -209,14 +204,42 @@ export default function AddProperty() {
 
 
   const addAmenity = () => {
-    if (amenityInput.trim() && !amenities.includes(amenityInput.trim())) {
-      setAmenities(prev => [...prev, amenityInput.trim()]);
-      setAmenityInput("");
+    const trimmedAmenity = amenityInput.trim();
+    
+    if (!trimmedAmenity) {
+      toast({
+        title: "Empty Amenity",
+        description: "Please enter an amenity name",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    if (amenities.includes(trimmedAmenity)) {
+      toast({
+        title: "Duplicate Amenity",
+        description: `"${trimmedAmenity}" is already added`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setAmenities(prev => [...prev, trimmedAmenity]);
+    setAmenityInput("");
+    
+    toast({
+      title: "Amenity Added",
+      description: `"${trimmedAmenity}" has been added to your property`,
+    });
   };
 
   const removeAmenity = (amenity: string) => {
     setAmenities(prev => prev.filter(a => a !== amenity));
+    
+    toast({
+      title: "Amenity Removed",
+      description: `"${amenity}" has been removed from your property`,
+    });
   };
 
   if (isLoading) {
@@ -470,32 +493,121 @@ export default function AddProperty() {
 
                 {/* Amenities */}
                 <div className="space-y-4">
-                  <Label>Amenities</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-medium">Amenities</Label>
+                    {amenities.length > 0 && (
+                      <span className="text-sm text-gray-500">
+                        ({amenities.length} added)
+                      </span>
+                    )}
+                  </div>
+                  
                   <div className="flex gap-2">
                     <Input
-                      placeholder="e.g., Swimming Pool, Gym, Parking"
+                      placeholder="e.g., Swimming Pool, Gym, Parking, Security System"
                       value={amenityInput}
                       onChange={(e) => setAmenityInput(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addAmenity())}
+                      className="flex-1"
                     />
-                    <Button type="button" onClick={addAmenity}>Add</Button>
+                    <Button 
+                      type="button" 
+                      onClick={addAmenity}
+                      disabled={!amenityInput.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
                   </div>
+                  
                   {amenities.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {amenities.map((amenity) => (
-                        <div key={amenity} className="flex items-center gap-1 bg-secondary text-white px-3 py-1 rounded-full text-sm">
-                          {amenity}
-                          <button
-                            type="button"
-                            onClick={() => removeAmenity(amenity)}
-                            className="ml-1 hover:text-red-200"
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-gray-700">
+                        Added Amenities:
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {amenities.map((amenity, index) => (
+                          <div 
+                            key={amenity} 
+                            className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3 group hover:bg-green-100 transition-colors"
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-sm font-medium text-green-800">
+                                {amenity}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeAmenity(amenity)}
+                              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                              title="Remove amenity"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+                  
+                  {/* Empty State - Only show when no amenities */}
+                  {amenities.length === 0 && (
+                    <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="text-gray-500">
+                        <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">No amenities added yet</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Add amenities to make your property more attractive
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Quick Add Common Amenities - Always show */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">
+                      Quick Add Common Amenities:
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "Swimming Pool", "Gym", "Parking", "Security System", 
+                        "Air Conditioning", "Balcony", "Garden", "Elevator",
+                        "Pet Friendly", "Furnished", "Internet", "CCTV"
+                      ].map((commonAmenity) => (
+                        <Button
+                          key={commonAmenity}
+                          type="button"
+                          variant={amenities.includes(commonAmenity) ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            if (!amenities.includes(commonAmenity)) {
+                              setAmenities(prev => [...prev, commonAmenity]);
+                              toast({
+                                title: "Amenity Added",
+                                description: `"${commonAmenity}" has been added`,
+                              });
+                            } else {
+                              toast({
+                                title: "Already Added",
+                                description: `"${commonAmenity}" is already in your list`,
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className={`text-xs ${amenities.includes(commonAmenity) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          disabled={amenities.includes(commonAmenity)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          {commonAmenity}
+                          {amenities.includes(commonAmenity) && (
+                            <span className="ml-1 text-xs">✓</span>
+                          )}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Broker Services Checkbox - Only for Sellers */}
@@ -546,7 +658,7 @@ export default function AddProperty() {
                   <Button 
                     type="submit" 
                     disabled={createPropertyMutation.isPending}
-                    className="bg-secondary hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                     onClick={() => {
                       console.log('=== BUTTON CLICKED ===');
                       console.log('Form state:', form.getValues());
