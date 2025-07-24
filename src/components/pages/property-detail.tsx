@@ -41,13 +41,6 @@ export default function PropertyDetail() {
 
   const propertyId = params.id as string;
 
-  // Update isFavorite state when favoriteStatus changes
-  useEffect(() => {
-    if (favoriteStatus) {
-      setIsFavorite(favoriteStatus.isFavorited);
-    }
-  }, [favoriteStatus]);
-
   // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -81,6 +74,13 @@ export default function PropertyDetail() {
     },
     enabled: isAuthenticated && currentRole === "buyer",
   });
+
+  // Update isFavorite state when favoriteStatus changes
+  useEffect(() => {
+    if (favoriteStatus) {
+      setIsFavorite(favoriteStatus.isFavorited);
+    }
+  }, [favoriteStatus]);
 
   const favoriteMutation = useMutation({
     mutationFn: async (action: 'add' | 'remove') => {
