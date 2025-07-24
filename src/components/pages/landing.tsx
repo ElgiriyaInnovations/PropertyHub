@@ -39,7 +39,7 @@ export default function Landing() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')"
+            backgroundImage: "url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')"
           }}
         />
         
@@ -58,8 +58,8 @@ export default function Landing() {
           
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white leading-tight">
-            Find <span className="text-gray-800">Your</span>
-            <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Find <span className="text-gray-300">Your</span>
+            <span className="block text-white drop-shadow-2xl shadow-black animate-pulse">
               Dream Property
             </span>
           </h1>

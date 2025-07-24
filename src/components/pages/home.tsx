@@ -65,7 +65,7 @@ export default function Home() {
           "Welcome to PropertyHub"
         }
         role={currentRole}
-        showBackground={true}
+        showBackground={false}
         className="py-20"
       />
       
