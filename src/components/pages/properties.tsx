@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Grid, List } from "lucide-react";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { LandingImage } from "@/components/ui/landing-image";
 
 export default function Properties() {
   const { toast } = useToast();
@@ -98,13 +99,13 @@ export default function Properties() {
       {/* Hero Section with Search */}
       <section className="bg-white shadow-sm py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <RoleBadge key={currentRole} />
-            </div>
-            <h1 className="text-3xl font-bold text-neutral-800 mb-4">Find Your Perfect Property</h1>
-            <p className="text-lg text-neutral-600">Discover properties that match your lifestyle and budget</p>
-          </div>
+          <LandingImage
+            title="Find Your Perfect Property"
+            subtitle="Discover properties that match your lifestyle and budget"
+            role={currentRole}
+            showBackground={false}
+            className="py-8"
+          />
           
           <PropertySearch />
         </div>

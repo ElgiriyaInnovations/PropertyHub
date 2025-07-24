@@ -70,6 +70,8 @@ export default function Auth() {
       });
       // Set token in localStorage for API requests
       localStorage.setItem('accessToken', data.accessToken);
+      // Set default role as buyer
+      localStorage.setItem('userRole', 'buyer');
       // Small delay to ensure token is set, then navigate
       setTimeout(() => {
         window.location.href = "/";

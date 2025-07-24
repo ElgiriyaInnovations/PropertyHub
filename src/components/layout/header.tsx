@@ -26,7 +26,8 @@ import {
   LogOut,
   Menu,
   X,
-  Loader2
+  Loader2,
+  TrendingUp
 } from "lucide-react";
 
 export default function Header() {
@@ -48,6 +49,7 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/properties", label: "Properties", icon: Search },
+    { href: "/market-insights", label: "Market Insights", icon: TrendingUp },
   ];
 
   // Add role-specific nav items
@@ -112,7 +114,16 @@ export default function Header() {
               {/* Role Switcher */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`flex items-center gap-2 transition-all duration-200 ${
+                      currentRole === 'buyer' ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100' :
+                      currentRole === 'seller' ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100' :
+                      currentRole === 'broker' ? 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100' :
+                      'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
                     <span className="text-sm">
                       {currentRole === 'buyer' && '🏠'}
                       {currentRole === 'seller' && '📋'}
@@ -271,8 +282,14 @@ export default function Header() {
                           disabled={isUpdating}
                           className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                             isActive
-                              ? "bg-blue-500 text-white shadow-md"
-                              : "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-gray-200"
+                              ? role === 'buyer' ? "bg-blue-500 text-white shadow-md" :
+                                role === 'seller' ? "bg-green-500 text-white shadow-md" :
+                                role === 'broker' ? "bg-purple-500 text-white shadow-md" :
+                                "bg-blue-500 text-white shadow-md"
+                              : role === 'buyer' ? "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-blue-200" :
+                                role === 'seller' ? "text-neutral-800 hover:bg-green-50 hover:text-green-600 border border-green-200" :
+                                role === 'broker' ? "text-neutral-800 hover:bg-purple-50 hover:text-purple-600 border border-purple-200" :
+                                "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-gray-200"
                           } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center space-x-3">

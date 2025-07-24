@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Home as HomeIcon, Search, Plus, ArrowRight } from "lucide-react";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { LandingImage } from "@/components/ui/landing-image";
 
 export default function Home() {
   const { toast } = useToast();
@@ -55,25 +56,22 @@ export default function Home() {
       <AuthHeader />
       
       {/* Hero Section */}
-      <section className="relative py-20 px-4">
+      <LandingImage
+        title={`Welcome back, ${user?.firstName || user?.email}`}
+        subtitle={
+          currentRole === 'buyer' ? "Discover your perfect home with our curated selection" :
+          currentRole === 'seller' ? "Manage your properties and connect with buyers" :
+          currentRole === 'broker' ? "Connect with clients and grow your business" :
+          "Welcome to PropertyHub"
+        }
+        role={currentRole}
+        showBackground={true}
+        className="py-20"
+      />
+      
+      {/* Action Buttons */}
+      <section className="py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8">
-            {/* Role Badge */}
-            <div className="mb-6">
-              <RoleBadge key={currentRole} />
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Welcome back, {user?.firstName || user?.email}
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {currentRole === 'buyer' && "Discover your perfect home with our curated selection"}
-              {currentRole === 'seller' && "Manage your properties and connect with buyers"}
-              {currentRole === 'broker' && "Connect with clients and grow your business"}
-            </p>
-          </div>
-          
-          {/* Main Action Button */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {currentRole === 'buyer' && (
               <Link href="/properties">
