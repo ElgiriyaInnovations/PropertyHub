@@ -11,6 +11,16 @@ export function middleware(request: NextRequest) {
   // Get the token from cookies
   const token = request.cookies.get('accessToken')?.value;
 
+  // Special handling for root path
+  if (path === '/') {
+    // If no token, allow access (show landing page)
+    if (!token) {
+      return NextResponse.next();
+    }
+    // If has token, allow access (show home page)
+    return NextResponse.next();
+  }
+
   // Redirect to auth page if accessing protected route without token
   if (!isPublicPath && !token) {
     return NextResponse.redirect(new URL('/auth', request.url));
