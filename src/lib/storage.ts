@@ -117,35 +117,7 @@ export class DatabaseStorage implements IStorage {
   }): Promise<Property[]> {
     console.log("Storage getProperties called with filters:", filters);
     
-    let query = db.select({
-      id: properties.id,
-      title: properties.title,
-      description: properties.description,
-      price: properties.price,
-      propertyType: properties.propertyType,
-      status: properties.status,
-      bedrooms: properties.bedrooms,
-      bathrooms: properties.bathrooms,
-      squareFeet: properties.squareFeet,
-      address: properties.address,
-      city: properties.city,
-      state: properties.state,
-      zipCode: properties.zipCode,
-      latitude: properties.latitude,
-      longitude: properties.longitude,
-      images: properties.images,
-      amenities: properties.amenities,
-      ownerId: properties.ownerId,
-      createdAt: properties.createdAt,
-      updatedAt: properties.updatedAt,
-      owner: {
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
-      }
-    }).from(properties).leftJoin(users, eq(properties.ownerId, users.id));
+    let query = db.select().from(properties);
 
     const conditions = [];
 
@@ -179,7 +151,7 @@ export class DatabaseStorage implements IStorage {
       }
       if (filters.propertyType) {
         console.log("Adding propertyType filter:", filters.propertyType);
-        conditions.push(eq(properties.propertyType, filters.propertyType));
+        conditions.push(eq(properties.propertyType, filters.propertyType as "house" | "apartment" | "condo" | "townhouse" | "land" | "commercial"));
       }
       if (filters.minPrice) {
         console.log("Adding minPrice filter:", filters.minPrice);
@@ -195,7 +167,7 @@ export class DatabaseStorage implements IStorage {
       }
       if (filters.status) {
         console.log("Adding status filter:", filters.status);
-        conditions.push(eq(properties.status, filters.status));
+        conditions.push(eq(properties.status, filters.status as "active" | "pending" | "sold" | "rented"));
       }
       if (filters.ownerId) {
         console.log("Adding ownerId filter:", filters.ownerId);
@@ -203,11 +175,14 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    let result;
+    
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      result = await query.where(and(...conditions)).orderBy(desc(properties.createdAt));
+    } else {
+      result = await query.orderBy(desc(properties.createdAt));
     }
-
-    const result = await query.orderBy(desc(properties.createdAt));
+    
     console.log(`Storage found ${result.length} properties after filtering`);
     return result;
   }
@@ -278,6 +253,7 @@ export class DatabaseStorage implements IStorage {
         longitude: properties.longitude,
         images: properties.images,
         amenities: properties.amenities,
+        needsBrokerServices: properties.needsBrokerServices,
         ownerId: properties.ownerId,
         createdAt: properties.createdAt,
         updatedAt: properties.updatedAt,

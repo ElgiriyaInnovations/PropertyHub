@@ -38,17 +38,9 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
         formData.append('images', file);
       });
 
-      const token = localStorage.getItem('accessToken');
-      console.log('Upload - Token found:', token ? 'Yes' : 'No');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
-      }
-
       const response = await fetch('/api/properties/upload-images', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Include cookies for authentication
         body: formData,
       });
 
@@ -85,18 +77,12 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
 
   const handleRemoveImage = async (imageUrl: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      console.log('Delete - Token found:', token ? 'Yes' : 'No');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
-      }
-
       const response = await fetch('/api/properties/images', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({ imageUrl }),
       });
 

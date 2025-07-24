@@ -28,7 +28,7 @@ export default function PropertyCard({
   const { currentRole } = useRoleSwitch();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isFavorite, setIsFavorite] = useState(property.isFavorite || false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: async () => {

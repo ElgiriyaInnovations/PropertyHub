@@ -27,11 +27,11 @@ export default function Properties() {
   const urlFilters: Record<string, string> = {};
   
   // Get all parameters from search params
-  for (const [key, value] of searchParams.entries()) {
+  searchParams.forEach((value, key) => {
     if (value && value.trim()) {
       urlFilters[key] = value.trim();
     }
-  }
+  });
   
   // Always include status filter
   urlFilters.status = 'active';
@@ -119,7 +119,7 @@ export default function Properties() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <span className="text-sm text-neutral-600">
-                  {properties?.length || 0} properties found
+                  {Array.isArray(properties) ? properties.length : 0} properties found
                 </span>
               </div>
               
@@ -156,10 +156,10 @@ export default function Properties() {
                 </Card>
               ))}
             </div>
-          ) : properties && properties.length > 0 ? (
+          ) : Array.isArray(properties) && properties.length > 0 ? (
             <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
               {properties.map((property: any) => (
-                <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+                <PropertyCard key={property.id} property={property} />
               ))}
             </div>
           ) : (

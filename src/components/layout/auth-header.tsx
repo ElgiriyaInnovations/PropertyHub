@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { Home, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import {
@@ -15,6 +16,7 @@ import {
 
 export default function AuthHeader() {
   const { user } = useAuth();
+  const { currentRole } = useRoleSwitch();
   const { toast } = useToast();
 
   const logoutMutation = useMutation({
@@ -55,12 +57,12 @@ export default function AuthHeader() {
             <Link href="/properties" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
               Properties
             </Link>
-            {user?.role === 'buyer' && (
+            {currentRole === 'buyer' && (
               <Link href="/market-insights" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
                 Market Insights
               </Link>
             )}
-            {(user?.role === 'seller' || user?.role === 'broker') && (
+            {(currentRole === 'seller' || currentRole === 'broker') && (
               <Link href="/add-property" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
                 Add Property
               </Link>

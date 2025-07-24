@@ -27,12 +27,18 @@ export interface S3UploadResult {
   url: string;
 }
 
+export interface UploadFile {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+}
+
 export class S3Service {
   /**
    * Upload a file to S3
    */
   static async uploadFile(
-    file: Express.Multer.File,
+    file: UploadFile,
     folder: string = 'properties'
   ): Promise<S3UploadResult> {
     const key = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}-${file.originalname}`;
@@ -42,7 +48,7 @@ export class S3Service {
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: 'public-read',
+      // Removed ACL: 'public-read' as it's not supported when Object Ownership is enabled
     });
 
     await s3Client.send(command);

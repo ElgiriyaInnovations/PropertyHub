@@ -267,7 +267,7 @@ export default function PropertyDetail() {
               {/* Thumbnail Images */}
               {property.images && property.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
-                  {property.images.map((image, index) => (
+                  {property.images.map((image: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
@@ -379,7 +379,7 @@ export default function PropertyDetail() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {property.amenities.map((amenity, index) => (
+                {property.amenities.map((amenity: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-gray-700">{amenity}</span>
