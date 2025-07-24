@@ -65,7 +65,7 @@ export function RoleSwitcher() {
           ) : (
             <CurrentIcon className="h-4 w-4" />
           )}
-          <span className="hidden sm:inline">{currentRole.label}</span>
+          <span className="hidden sm:inline">{currentRoleConfig.label}</span>
           <Badge 
             variant="secondary" 
             className={`text-xs ${currentRoleConfig.color} border`}

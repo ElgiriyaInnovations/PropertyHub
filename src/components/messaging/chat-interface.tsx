@@ -27,7 +27,7 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
   const [socket, setSocket] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages, isLoading: messagesLoading, error } = useQuery({
+  const { data: messages, isLoading: messagesLoading, error } = useQuery<any[]>({
     queryKey: [`/api/conversations/${conversation.id}/messages`],
     enabled: !!conversation.id,
     retry: false,
@@ -84,9 +84,12 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest("POST", `/api/messages`, {
-        conversationId: conversation.id,
-        content,
+      return apiRequest(`/api/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          content,
+        }),
       });
     },
     onSuccess: (response, content) => {
@@ -146,7 +149,7 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={otherUser.profileImageUrl} />
+              <AvatarImage src={otherUser.profileImageUrl || undefined} />
               <AvatarFallback>
                 {otherUser.firstName?.[0]}{otherUser.lastName?.[0]}
               </AvatarFallback>
@@ -228,7 +231,7 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
                 >
                   {!isOwnMessage && showAvatar && (
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={otherUser.profileImageUrl} />
+                      <AvatarImage src={otherUser.profileImageUrl || undefined} />
                       <AvatarFallback>
                         {otherUser.firstName?.[0]}{otherUser.lastName?.[0]}
                       </AvatarFallback>
@@ -253,7 +256,7 @@ export default function ChatInterface({ conversation, currentUserId }: ChatInter
 
                   {isOwnMessage && showAvatar && (
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.profileImageUrl} />
+                      <AvatarImage src={user?.profileImageUrl || undefined} />
                       <AvatarFallback>
                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                       </AvatarFallback>

@@ -7,7 +7,6 @@ import {
   index,
 } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table (required for Replit Auth)
@@ -163,10 +162,25 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
-export const insertPropertySchema = createInsertSchema(properties).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertPropertySchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().nullable().optional(),
+  price: z.number().positive("Price must be positive"),
+  propertyType: z.enum(["house", "apartment", "condo", "townhouse", "land", "commercial"]),
+  status: z.enum(["active", "pending", "sold", "rented"]).default("active"),
+  bedrooms: z.number().optional(),
+  bathrooms: z.number().optional(),
+  squareFeet: z.number().optional(),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zipCode: z.string().min(1, "Zip code is required"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  images: z.array(z.string()).default([]),
+  amenities: z.array(z.string()).default([]),
+  needsBrokerServices: z.boolean().optional(),
+  ownerId: z.string().min(1, "Owner ID is required"),
 });
 
 // For client-side validation (without ownerId)
@@ -174,15 +188,17 @@ export const clientPropertySchema = insertPropertySchema.omit({
   ownerId: true,
 });
 
-export const insertMessageSchema = createInsertSchema(messages).omit({
-  id: true,
-  createdAt: true,
+export const insertMessageSchema = z.object({
+  conversationId: z.number(),
+  senderId: z.string().min(1, "Sender ID is required"),
+  content: z.string().min(1, "Message content is required"),
+  isRead: z.boolean().default(false),
 });
 
-export const insertConversationSchema = createInsertSchema(conversations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertConversationSchema = z.object({
+  participant1Id: z.string().min(1, "Participant 1 ID is required"),
+  participant2Id: z.string().min(1, "Participant 2 ID is required"),
+  propertyId: z.number().optional(),
 });
 
 export type InsertProperty = z.infer<typeof insertPropertySchema>;

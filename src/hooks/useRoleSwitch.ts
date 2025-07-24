@@ -3,23 +3,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-
 export function useRoleSwitch() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [currentRole, setCurrentRole] = useState<"buyer" | "seller" | "broker">("buyer");
+  const [currentRole, setCurrentRole] = useState<"buyer" | "seller" | "broker" | undefined>(undefined);
 
-  // Load role from localStorage on mount
+  // Load role from localStorage on mount and when user changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedRole = localStorage.getItem('userRole') as "buyer" | "seller" | "broker";
       if (savedRole && ["buyer", "seller", "broker"].includes(savedRole)) {
         setCurrentRole(savedRole);
+      } else {
+        // Set default role if none exists
+        localStorage.setItem('userRole', 'buyer');
+        setCurrentRole('buyer');
       }
     }
-  }, []);
+  }, [user?.id]); // Re-run when user changes
 
   const switchRole = async (newRole: "buyer" | "seller" | "broker") => {
     if (newRole === currentRole) return;
@@ -31,11 +34,6 @@ export function useRoleSwitch() {
       localStorage.setItem('userRole', newRole);
       setCurrentRole(newRole);
       
-      // Dispatch custom event to notify other components
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('roleChanged'));
-      }
-      
       // Update the user data in the query cache to reflect the new role
       queryClient.setQueryData(["/api/auth/user"], (oldData: any) => {
         if (oldData) {
@@ -43,9 +41,6 @@ export function useRoleSwitch() {
         }
         return oldData;
       });
-      
-      // Also invalidate the user query to force a refresh
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
       const roleLabels = {
         buyer: "Buyer",

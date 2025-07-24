@@ -146,7 +146,7 @@ export default function Profile() {
             <Card>
               <CardContent className="p-6 text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
-                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarImage src={user?.profileImageUrl || undefined} />
                   <AvatarFallback className="text-lg">
                     {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>

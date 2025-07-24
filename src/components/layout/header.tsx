@@ -31,11 +31,11 @@ import {
 
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
-  const { switchRole, isUpdating } = useRoleSwitch();
+  const { switchRole, isUpdating, currentRole } = useRoleSwitch();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { data: unreadCount } = useQuery({
+  const { data: unreadCount } = useQuery<number>({
     queryKey: ["/api/conversations/unread-count"],
     enabled: isAuthenticated,
     retry: false,
@@ -51,7 +51,7 @@ export default function Header() {
   ];
 
   // Add role-specific nav items
-  if (user?.role === "seller" || user?.role === "broker") {
+  if (currentRole === "seller" || currentRole === "broker") {
     navItems.push({ href: "/add-property", label: "Add Property", icon: Plus });
   }
 
@@ -100,7 +100,7 @@ export default function Header() {
                 <div className="relative">
                   <Button variant="ghost" size="sm" className="relative">
                     <MessageSquare className="h-5 w-5" />
-                    {unreadCount > 0 && (
+                    {unreadCount && unreadCount > 0 && (
                       <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs min-w-5 h-5 flex items-center justify-center">
                         {unreadCount > 99 ? "99+" : unreadCount}
                       </Badge>
@@ -114,12 +114,12 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
                     <span className="text-sm">
-                      {user?.role === 'buyer' && '🏠'}
-                      {user?.role === 'seller' && '📋'}
-                      {user?.role === 'broker' && '👔'}
+                      {currentRole === 'buyer' && '🏠'}
+                      {currentRole === 'seller' && '📋'}
+                      {currentRole === 'broker' && '👔'}
                     </span>
                     <span className="hidden sm:inline text-sm font-medium capitalize">
-                      {user?.role}
+                      {currentRole}
                     </span>
                     {isUpdating && <Loader2 className="h-3 w-3 animate-spin" />}
                   </Button>
@@ -128,7 +128,7 @@ export default function Header() {
                   <DropdownMenuLabel>Switch Role</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {["buyer", "seller", "broker"].map((role) => {
-                    const isActive = user?.role === role;
+                    const isActive = currentRole === role;
                     const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
                     const roleIcons = {
                       buyer: "🏠",
@@ -139,7 +139,7 @@ export default function Header() {
                       <DropdownMenuItem
                         key={role}
                         onClick={() => {
-                          if (user?.role !== role) {
+                          if (currentRole !== role) {
                             switchRole(role as "buyer" | "seller" | "broker");
                           }
                         }}
@@ -162,7 +162,7 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2 p-2">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.profileImageUrl} />
+                      <AvatarImage src={user?.profileImageUrl || undefined} />
                       <AvatarFallback>
                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                       </AvatarFallback>
@@ -172,11 +172,11 @@ export default function Header() {
                         {user?.firstName} {user?.lastName}
                       </p>
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-600 capitalize">{user?.role}</span>
+                        <span className="text-xs text-neutral-600 capitalize">{currentRole}</span>
                         <span className="text-xs">
-                          {user?.role === 'buyer' && '🏠'}
-                          {user?.role === 'seller' && '📋'}
-                          {user?.role === 'broker' && '👔'}
+                          {currentRole === 'buyer' && '🏠'}
+                          {currentRole === 'seller' && '📋'}
+                          {currentRole === 'broker' && '👔'}
                         </span>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export default function Header() {
                   <div className="text-sm font-medium text-neutral-700 mb-3">Switch Role</div>
                   <div className="space-y-2">
                     {["buyer", "seller", "broker"].map((role) => {
-                      const isActive = user?.role === role;
+                      const isActive = currentRole === role;
                       const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
                       const roleIcons = {
                         buyer: "🏠",
@@ -263,7 +263,7 @@ export default function Header() {
                         <button
                           key={role}
                           onClick={() => {
-                            if (user?.role !== role) {
+                            if (currentRole !== role) {
                               switchRole(role as "buyer" | "seller" | "broker");
                             }
                             setMobileMenuOpen(false);
@@ -280,7 +280,7 @@ export default function Header() {
                             <span>{roleLabel}</span>
                           </div>
                           {isActive && <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Active</span>}
-                          {isUpdating && user?.role !== role && (
+                          {isUpdating && currentRole !== role && (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           )}
                         </button>
@@ -298,7 +298,7 @@ export default function Header() {
                     <MessageSquare className="h-4 w-4" />
                     <span>Messages</span>
                   </div>
-                  {unreadCount > 0 && (
+                  {unreadCount && unreadCount > 0 && (
                     <Badge className="bg-red-500 text-white text-xs">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </Badge>

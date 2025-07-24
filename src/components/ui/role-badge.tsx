@@ -1,10 +1,19 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { Badge } from "@/components/ui/badge";
 
 export function RoleBadge() {
-  const { user } = useAuth();
+  const { currentRole } = useRoleSwitch();
 
-  if (!user) return null;
+  if (!currentRole) {
+    return (
+      <Badge 
+        variant="secondary" 
+        className="text-sm px-4 py-2 border bg-gray-100 text-gray-800"
+      >
+        Loading...
+      </Badge>
+    );
+  }
 
   const getRoleConfig = (role: string) => {
     switch (role) {
@@ -31,7 +40,7 @@ export function RoleBadge() {
     }
   };
 
-  const roleConfig = getRoleConfig(user.role || "buyer");
+  const roleConfig = getRoleConfig(currentRole);
 
   return (
     <Badge 

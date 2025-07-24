@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ import { RoleBadge } from "@/components/ui/role-badge";
 export default function Messages() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { currentRole } = useRoleSwitch();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,7 +36,7 @@ export default function Messages() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: conversations, isLoading: conversationsLoading, error } = useQuery({
+  const { data: conversations, isLoading: conversationsLoading, error } = useQuery<any[]>({
     queryKey: ["/api/conversations"],
     enabled: isAuthenticated,
     retry: false,
@@ -112,7 +114,7 @@ export default function Messages() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
                       <div className="flex justify-center mb-4">
-              <RoleBadge key={user?.role} />
+              <RoleBadge key={currentRole} />
             </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Messages</h1>
           <p className="text-lg text-neutral-600">Connect with buyers, sellers, and brokers</p>

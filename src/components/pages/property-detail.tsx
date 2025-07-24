@@ -1,44 +1,45 @@
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Heart, 
-  Share2, 
   MapPin, 
   Bed, 
   Bath, 
   Square, 
+  MessageSquare, 
+  Phone, 
+  Mail, 
+  Share2,
   Calendar,
-  Phone,
-  Mail,
-  MessageSquare,
-  ArrowLeft,
-  Camera,
-  MapIcon
+  User,
+  Building2
 } from "lucide-react";
 import { RoleBadge } from "@/components/ui/role-badge";
 
-interface PropertyDetailProps {
-  id: string;
-}
-
-export default function PropertyDetail({ id }: PropertyDetailProps) {
+export default function PropertyDetail() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { currentRole } = useRoleSwitch();
+  const router = useRouter();
+  const params = useParams();
   const queryClient = useQueryClient();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const propertyId = params.id as string;
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -49,57 +50,46 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/auth";
+        window.location.href = "/api/login";
       }, 500);
       return;
     }
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: property, isLoading: propertyLoading, error } = useQuery({
-    queryKey: [`/api/properties/${id}`],
-    enabled: !!id && isAuthenticated,
-    retry: false,
+    queryKey: ["/api/properties", propertyId],
+    queryFn: () => apiRequest(`/api/properties/${propertyId}`),
+    enabled: !!propertyId,
   });
 
-  const { data: favorites } = useQuery({
-    queryKey: ["/api/favorites"],
-    enabled: isAuthenticated && user?.role === "buyer",
-    retry: false,
+  const { data: isFavorited } = useQuery({
+    queryKey: ["/api/favorites", propertyId],
+    queryFn: () => apiRequest(`/api/favorites/${propertyId}`),
+    enabled: isAuthenticated && currentRole === "buyer",
   });
-
-  useEffect(() => {
-    if (favorites && property) {
-      setIsFavorited(favorites.some((fav: any) => fav.id === property.id));
-    }
-  }, [favorites, property]);
-
-  useEffect(() => {
-    if (error && isUnauthorizedError(error as Error)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/auth";
-      }, 500);
-    }
-  }, [error, toast]);
 
   const favoriteMutation = useMutation({
     mutationFn: async (action: 'add' | 'remove') => {
       if (action === 'add') {
-        return apiRequest('POST', `/api/favorites/${property.id}`);
+        return apiRequest('/api/favorites', {
+          method: 'POST',
+          body: JSON.stringify({ propertyId }),
+        });
       } else {
-        return apiRequest('DELETE', `/api/favorites/${property.id}`);
+        return apiRequest(`/api/favorites/${propertyId}`, {
+          method: 'DELETE',
+        });
       }
     },
-    onSuccess: () => {
-      setIsFavorited(!isFavorited);
+    onSuccess: (_, action) => {
+      setIsFavorite(action === 'add');
       queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      
       toast({
-        title: isFavorited ? "Removed from favorites" : "Added to favorites",
-        description: isFavorited ? "Property removed from your favorites" : "Property added to your favorites",
+        title: action === 'add' ? "Added to Favorites" : "Removed from Favorites",
+        description: action === 'add' 
+          ? "Property has been added to your favorites"
+          : "Property has been removed from your favorites",
       });
     },
     onError: (error) => {
@@ -110,7 +100,7 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/auth";
+          window.location.href = "/api/login";
         }, 500);
         return;
       }
@@ -124,13 +114,16 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
 
   const contactMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/conversations`, {
-        participantId: property.ownerId,
-        propertyId: property.id,
+      return apiRequest('/api/conversations', {
+        method: 'POST',
+        body: JSON.stringify({
+          participantId: property.ownerId,
+          propertyId: property.id,
+        }),
       });
     },
-    onSuccess: (response) => {
-      const conversation = response.json();
+    onSuccess: async (response) => {
+      const conversation = await response.json();
       window.location.href = `/messages?conversation=${conversation.id}`;
     },
     onError: (error) => {
@@ -141,7 +134,7 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/auth";
+          window.location.href = "/api/login";
         }, 500);
         return;
       }
@@ -154,15 +147,16 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
   });
 
   const handleFavorite = () => {
-    if (user?.role !== "buyer") {
+    if (currentRole !== "buyer") {
       toast({
-        title: "Access Denied",
-        description: "Only buyers can save favorites",
+        title: "Feature Unavailable",
+        description: "Favorites are only available for buyers",
         variant: "destructive",
       });
       return;
     }
-    favoriteMutation.mutate(isFavorited ? 'remove' : 'add');
+    
+    favoriteMutation.mutate(isFavorite ? 'remove' : 'add');
   };
 
   const handleContact = () => {
@@ -174,29 +168,38 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
       });
       return;
     }
+    
     contactMutation.mutate();
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: property.title,
-        text: `Check out this property: ${property.title}`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Property link copied to clipboard",
-      });
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-orange-100 text-orange-800";
+      case "sold":
+        return "bg-red-100 text-red-800";
+      case "rented":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (isLoading) {
+  if (isLoading || propertyLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
       </div>
     );
   }
@@ -205,28 +208,20 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
     return null;
   }
 
-  if (propertyLoading) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-96 bg-neutral-200 rounded-lg mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <div className="h-8 bg-neutral-200 rounded mb-4"></div>
-                <div className="h-6 bg-neutral-200 rounded mb-8"></div>
-                <div className="space-y-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-4 bg-neutral-200 rounded"></div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="h-64 bg-neutral-200 rounded"></div>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h1>
+              <p className="text-gray-600 mb-6">The property you're looking for doesn't exist or has been removed.</p>
+              <Button onClick={() => router.push('/properties')}>
+                Browse Properties
+              </Button>
+            </CardContent>
+          </Card>
         </div>
         <Footer />
       </div>
@@ -234,328 +229,247 @@ export default function PropertyDetail({ id }: PropertyDetailProps) {
   }
 
   if (!property) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-neutral-800 mb-4">Property Not Found</h1>
-            <p className="text-neutral-600 mb-8">The property you're looking for doesn't exist or has been removed.</p>
-            <Link href="/properties" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Back to Properties
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    return null;
   }
-
-  const images = property.images && property.images.length > 0 
-    ? property.images 
-    : ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600'];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Link href="/properties" className="inline-flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Properties
-          </Link>
-        </div>
-
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Role Badge */}
-        <div className="flex justify-center mb-6">
-          <RoleBadge key={user?.role} />
+        <div className="mb-6">
+          <RoleBadge key={currentRole} />
         </div>
 
-        {/* Image Gallery */}
+        {/* Property Images */}
         <div className="mb-8">
-          <div className="relative">
-            <img
-              src={images[currentImageIndex]}
-              alt={property.title}
-              className="w-full h-96 object-cover rounded-lg"
-            />
-            
-            {/* Image Navigation */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : images.length - 1)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={() => setCurrentImageIndex(prev => prev < images.length - 1 ? prev + 1 : 0)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
-                >
-                  →
-                </button>
-                
-                {/* Image Indicators */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {images.map((_, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Main Image */}
+            <div className="space-y-4">
+              <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                {property.images && property.images.length > 0 ? (
+                  <img
+                    src={property.images[selectedImage]}
+                    alt={property.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-gray-400 text-center">
+                      <div className="text-6xl mb-4">🏠</div>
+                      <div className="text-lg">No Image Available</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Thumbnail Images */}
+              {property.images && property.images.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {property.images.map((image, index) => (
                     <button
                       key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`w-3 h-3 rounded-full ${
-                        index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                      onClick={() => setSelectedImage(index)}
+                      className={`aspect-video rounded-md overflow-hidden border-2 transition-colors ${
+                        selectedImage === index 
+                          ? 'border-blue-500' 
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
-                    />
+                    >
+                      <img
+                        src={image}
+                        alt={`${property.title} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
                   ))}
                 </div>
-              </>
-            )}
+              )}
+            </div>
 
-            {/* Thumbnail Grid */}
-            {images.length > 1 && (
-              <div className="flex space-x-2 mt-4 overflow-x-auto">
-                {images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 ${
-                      index === currentImageIndex ? 'ring-2 ring-primary' : ''
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${property.title} ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Property Header */}
-            <div className="mb-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-neutral-800 mb-2">{property.title}</h1>
-                  <div className="flex items-center text-neutral-600 mb-4">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    <span>{property.address}, {property.city}, {property.state} {property.zipCode}</span>
-                  </div>
+            {/* Property Info */}
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+                  <Badge className={getStatusColor(property.status)}>
+                    {property.status === 'active' ? 'For Sale' : property.status}
+                  </Badge>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  {user?.role === "buyer" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleFavorite}
-                      disabled={favoriteMutation.isPending}
-                      className={isFavorited ? "text-red-500 border-red-500" : ""}
-                    >
-                      <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                <div className="flex items-center text-gray-600 mb-4">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  <span>{property.address}, {property.city}, {property.state} {property.zipCode}</span>
+                </div>
+                <div className="text-3xl font-bold text-green-600 mb-4">
+                  {formatPrice(property.price)}
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="text-3xl font-bold text-primary">
-                  ${parseFloat(property.price).toLocaleString()}
-                  {property.status === 'rented' && <span className="text-base font-normal">/mo</span>}
-                </div>
-                <Badge variant={
-                  property.status === 'active' ? 'default' :
-                  property.status === 'pending' ? 'secondary' :
-                  property.status === 'sold' ? 'destructive' : 'outline'
-                }>
-                  {property.status}
-                </Badge>
-              </div>
-
-              <div className="flex items-center space-x-8 text-neutral-600 mb-6">
+              {/* Property Details */}
+              <div className="grid grid-cols-3 gap-4">
                 {property.bedrooms && (
-                  <div className="flex items-center">
-                    <Bed className="h-5 w-5 mr-2" />
-                    <span>{property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}</span>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <Bed className="h-6 w-6 mx-auto mb-1 text-gray-600" />
+                    <div className="text-sm text-gray-600">{property.bedrooms} Bedrooms</div>
                   </div>
                 )}
                 {property.bathrooms && (
-                  <div className="flex items-center">
-                    <Bath className="h-5 w-5 mr-2" />
-                    <span>{property.bathrooms} bath{property.bathrooms !== 1 ? 's' : ''}</span>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <Bath className="h-6 w-6 mx-auto mb-1 text-gray-600" />
+                    <div className="text-sm text-gray-600">{property.bathrooms} Bathrooms</div>
                   </div>
                 )}
                 {property.squareFeet && (
-                  <div className="flex items-center">
-                    <Square className="h-5 w-5 mr-2" />
-                    <span>{property.squareFeet.toLocaleString()} sq ft</span>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <Square className="h-6 w-6 mx-auto mb-1 text-gray-600" />
+                    <div className="text-sm text-gray-600">{property.squareFeet} sq ft</div>
                   </div>
                 )}
               </div>
-            </div>
 
-            <Separator className="mb-6" />
-
-            {/* Description */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-neutral-800 mb-4">Description</h2>
-              <p className="text-neutral-600 whitespace-pre-wrap">
-                {property.description || "No description available."}
-              </p>
-            </div>
-
-            {/* Amenities */}
-            {property.amenities && property.amenities.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-neutral-800 mb-4">Amenities</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {property.amenities.map((amenity: string, index: number) => (
-                    <div key={index} className="flex items-center">
-                      <span className="text-secondary mr-2">✓</span>
-                      <span className="text-neutral-600">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Property Details */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-neutral-800 mb-4">Property Details</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="font-medium text-neutral-800">Property Type:</span>
-                  <span className="ml-2 text-neutral-600 capitalize">{property.propertyType}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-neutral-800">Status:</span>
-                  <span className="ml-2 text-neutral-600 capitalize">{property.status}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-neutral-800">Listed:</span>
-                  <span className="ml-2 text-neutral-600">
-                    {new Date(property.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                {property.updatedAt !== property.createdAt && (
-                  <div>
-                    <span className="font-medium text-neutral-800">Updated:</span>
-                    <span className="ml-2 text-neutral-600">
-                      {new Date(property.updatedAt).toLocaleDateString()}
-                    </span>
-                  </div>
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                {currentRole === "buyer" && (
+                  <Button
+                    onClick={handleFavorite}
+                    disabled={favoriteMutation.isPending}
+                    variant={isFavorite ? "default" : "outline"}
+                    className="flex-1"
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
+                    {favoriteMutation.isPending ? 'Updating...' : (isFavorite ? 'Saved' : 'Save')}
+                  </Button>
                 )}
+                
+                {property.ownerId !== user?.id && (
+                  <Button
+                    onClick={handleContact}
+                    disabled={contactMutation.isPending}
+                    className="flex-1"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    {contactMutation.isPending ? 'Starting...' : 'Contact Owner'}
+                  </Button>
+                )}
+                
+                <Button variant="outline" size="icon">
+                  <Share2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </div>
-
-          {/* Sidebar */}
-          <div>
-            {/* Owner/Agent Card */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <Avatar className="w-16 h-16 mx-auto mb-4">
-                    <AvatarImage src="/api/placeholder/64/64" />
-                    <AvatarFallback>
-                      {property.owner?.firstName?.[0]}{property.owner?.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <h3 className="font-semibold text-neutral-800 mb-1">
-                    {property.owner?.firstName} {property.owner?.lastName}
-                  </h3>
-                  <p className="text-sm text-neutral-600 mb-4 capitalize">
-                    {property.owner?.role || 'Property Owner'}
-                  </p>
-
-                  {property.ownerId !== user?.id && (
-                    <div className="space-y-3">
-                      <Button 
-                        className="w-full bg-primary hover:bg-blue-700"
-                        onClick={handleContact}
-                        disabled={contactMutation.isPending}
-                      >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        {contactMutation.isPending ? 'Starting...' : 'Send Message'}
-                      </Button>
-                      
-                      {property.owner?.phone && (
-                        <Button variant="outline" className="w-full" asChild>
-                          <a href={`tel:${property.owner.phone}`}>
-                            <Phone className="h-4 w-4 mr-2" />
-                            Call
-                          </a>
-                        </Button>
-                      )}
-                      
-                      {property.owner?.email && (
-                        <Button variant="outline" className="w-full" asChild>
-                          <a href={`mailto:${property.owner.email}`}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Email
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  {property.ownerId === user?.id && (
-                    <div className="space-y-3">
-                      <Link href={`/edit-property/${property.id}`} className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Edit Property
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Map placeholder */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-neutral-800 mb-4">Location</h3>
-                <div className="bg-neutral-100 rounded-lg h-48 flex items-center justify-center">
-                  <div className="text-center text-neutral-500">
-                    <MapIcon className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">Map integration coming soon</p>
-                    <p className="text-xs mt-1">{property.city}, {property.state}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Additional Actions */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-neutral-800 mb-4">Actions</h3>
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full" onClick={handleShare}>
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Property
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href={`/properties?city=${property.city}&state=${property.state}`}>
-                      <MapPin className="h-4 w-4 mr-2" />
-                      View Similar Properties
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
+
+        {/* Property Description */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 leading-relaxed">{property.description}</p>
+          </CardContent>
+        </Card>
+
+        {/* Amenities */}
+        {property.amenities && property.amenities.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Amenities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {property.amenities.map((amenity, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-700">{amenity}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Property Owner */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Property Owner</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              <Avatar className="w-16 h-16">
+                <AvatarImage src={property.owner?.profileImageUrl} />
+                <AvatarFallback className="text-lg">
+                  {property.owner?.firstName?.[0]}{property.owner?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {property.owner?.firstName} {property.owner?.lastName}
+                </h3>
+                <p className="text-gray-600">{property.owner?.email}</p>
+                {property.owner?.phone && (
+                  <p className="text-gray-600">{property.owner.phone}</p>
+                )}
+              </div>
+              {property.ownerId !== user?.id && (
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Property Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Property Type</span>
+                  <span className="font-medium">{property.propertyType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <Badge className={getStatusColor(property.status)}>
+                    {property.status}
+                  </Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Listed</span>
+                  <span className="font-medium">
+                    {property.createdAt ? new Date(property.createdAt).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Address</span>
+                  <span className="font-medium text-right">{property.address}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">City</span>
+                  <span className="font-medium">{property.city}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">State</span>
+                  <span className="font-medium">{property.state}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Footer />

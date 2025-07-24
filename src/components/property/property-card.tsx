@@ -1,378 +1,253 @@
 import { useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, MapPin, Bed, Bath, Square, MessageSquare } from "lucide-react";
+import { Heart, MapPin, Bed, Bath, Square, Star, MessageSquare, Phone, Mail } from "lucide-react";
+import Link from "next/link";
+import type { Property } from "@/types/property";
 
 interface PropertyCardProps {
-  property: any;
-  viewMode?: "grid" | "list";
+  property: Property;
   showFavorite?: boolean;
+  showActions?: boolean;
+  className?: string;
 }
 
 export default function PropertyCard({ 
   property, 
-  viewMode = "grid",
-  showFavorite = true 
+  showFavorite = true, 
+  showActions = true,
+  className = "" 
 }: PropertyCardProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { currentRole } = useRoleSwitch();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(property.isFavorite || false);
 
-  const favoriteMutation = useMutation({
-    mutationFn: async (action: 'add' | 'remove') => {
-      if (action === 'add') {
-        return apiRequest('POST', `/api/favorites/${property.id}`);
-      } else {
-        return apiRequest('DELETE', `/api/favorites/${property.id}`);
-      }
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      const endpoint = isFavorite ? `/api/favorites/${property.id}` : '/api/favorites';
+      const method = isFavorite ? 'DELETE' : 'POST';
+      const body = isFavorite ? undefined : JSON.stringify({ propertyId: property.id });
+      
+      return apiRequest(endpoint, {
+        method,
+        body,
+      });
     },
     onSuccess: () => {
-      setIsFavorited(!isFavorited);
+      setIsFavorite(!isFavorite);
       queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      
       toast({
-        title: isFavorited ? "Removed from favorites" : "Added to favorites",
-        description: isFavorited ? "Property removed from your favorites" : "Property added to your favorites",
+        title: isFavorite ? "Removed from Favorites" : "Added to Favorites",
+        description: isFavorite 
+          ? `${property.title} has been removed from your favorites`
+          : `${property.title} has been added to your favorites`,
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      console.error('Error toggling favorite:', error);
       toast({
         title: "Error",
-        description: "Failed to update favorites",
+        description: "Failed to update favorites. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const contactMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('POST', `/api/conversations`, {
-        participantId: property.ownerId,
-        propertyId: property.id,
-      });
-    },
-    onSuccess: async (response) => {
-      const conversation = await response.json();
-      window.location.href = `/messages?conversation=${conversation.id}`;
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to start conversation",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (user?.role !== "buyer") {
+    if (!isAuthenticated) {
       toast({
-        title: "Access Denied",
-        description: "Only buyers can save favorites",
+        title: "Login Required",
+        description: "Please log in to save properties to your favorites",
         variant: "destructive",
       });
       return;
     }
-    
-    favoriteMutation.mutate(isFavorited ? 'remove' : 'add');
-  };
 
-  const handleContact = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (property.ownerId === user?.id) {
+    if (currentRole !== "buyer") {
       toast({
-        title: "Cannot Contact",
-        description: "You cannot contact yourself",
+        title: "Feature Unavailable",
+        description: "Favorites are only available for buyers",
         variant: "destructive",
       });
       return;
     }
-    
-    contactMutation.mutate();
+
+    toggleFavoriteMutation.mutate();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-secondary text-white";
-      case "pending":
-        return "bg-orange-500 text-white";
-      case "sold":
-        return "bg-red-500 text-white";
-      case "rented":
-        return "bg-purple-500 text-white";
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getPropertyTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'house':
+        return 'bg-blue-100 text-blue-800';
+      case 'apartment':
+        return 'bg-green-100 text-green-800';
+      case 'condo':
+        return 'bg-purple-100 text-purple-800';
+      case 'townhouse':
+        return 'bg-orange-100 text-orange-800';
       default:
-        return "bg-gray-500 text-white";
+        return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "active":
-        return "For Sale";
-      case "pending":
-        return "Pending";
-      case "sold":
-        return "Sold";
-      case "rented":
-        return "For Rent";
-      default:
-        return status;
-    }
-  };
-
-  const defaultImage = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400";
-  const propertyImage = property.images && property.images.length > 0 ? property.images[0] : defaultImage;
-
-  if (viewMode === "list") {
-    return (
-      <Card className="property-card overflow-hidden hover:shadow-lg transition-all cursor-pointer">
-        <CardContent className="p-0">
-          <div className="flex">
-            {/* Image */}
-            <div className="relative w-64 h-48 flex-shrink-0">
-              <Link href={`/property/${property.id}`}>
-                <img 
-                  src={propertyImage}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-              </Link>
-              <div className="absolute top-4 left-4">
-                <Badge className={getStatusColor(property.status)}>
-                  {getStatusLabel(property.status)}
-                </Badge>
-              </div>
-              {property.images && property.images.length > 1 && (
-                <Badge variant="secondary" className="absolute bottom-2 right-2 bg-black/60 text-white">
-                  +{property.images.length - 1} more
-                </Badge>
-              )}
-              {showFavorite && user?.role === "buyer" && (
-                <div className="absolute top-4 right-4">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full"
-                    onClick={handleFavorite}
-                    disabled={favoriteMutation.isPending}
-                  >
-                    <Heart className={`h-4 w-4 ${isFavorited ? "fill-current text-red-500" : "text-neutral-600"}`} />
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 p-6">
-              <Link href={`/property/${property.id}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-neutral-800">{property.title}</h3>
-                  <span className="text-2xl font-bold text-primary">
-                    LKR {parseFloat(property.price).toLocaleString()}
-                    {property.status === 'rented' && <span className="text-base font-normal">/mo</span>}
-                  </span>
-                </div>
-
-                <div className="flex items-center text-neutral-600 mb-4">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-sm">{property.address}, {property.city}, {property.state} {property.zipCode}</span>
-                </div>
-
-                <div className="flex items-center space-x-6 text-sm text-neutral-600 mb-4">
-                  {property.bedrooms && (
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1" />
-                      <span>{property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}</span>
-                    </div>
-                  )}
-                  {property.bathrooms && (
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1" />
-                      <span>{property.bathrooms} bath{property.bathrooms !== 1 ? 's' : ''}</span>
-                    </div>
-                  )}
-                  {property.squareFeet && (
-                    <div className="flex items-center">
-                      <Square className="h-4 w-4 mr-1" />
-                      <span>{property.squareFeet.toLocaleString()} sq ft</span>
-                    </div>
-                  )}
-                </div>
-
-                {property.description && (
-                  <p className="text-neutral-600 mb-4 line-clamp-2">{property.description}</p>
-                )}
-              </Link>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={property.owner?.profileImageUrl} />
-                    <AvatarFallback>
-                      {property.owner?.firstName?.[0]}{property.owner?.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium text-neutral-800">
-                      {property.owner?.firstName} {property.owner?.lastName}
-                    </p>
-                    <p className="text-xs text-neutral-600 capitalize">{property.owner?.role}</p>
-                  </div>
-                </div>
-                
-                {property.ownerId !== user?.id && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-primary hover:text-blue-700"
-                    onClick={handleContact}
-                    disabled={contactMutation.isPending}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    {contactMutation.isPending ? 'Starting...' : 'Contact'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="property-card overflow-hidden hover:shadow-lg transition-all cursor-pointer">
-      <div className="relative">
-        <Link href={`/property/${property.id}`}>
-          <img 
-            src={propertyImage}
-            alt={property.title}
-            className="w-full h-48 object-cover"
-          />
-        </Link>
-        <div className="absolute top-4 left-4">
-          <Badge className={getStatusColor(property.status)}>
-            {getStatusLabel(property.status)}
-          </Badge>
+    <Card className={`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className}`}>
+      <Link href={`/properties/${property.id}`}>
+        <div className="relative">
+          {/* Property Image */}
+          <div className="aspect-video bg-gray-200 relative overflow-hidden">
+            {property.images && property.images.length > 0 ? (
+              <img
+                src={property.images[0]}
+                alt={property.title}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <div className="text-gray-400 text-center">
+                  <div className="text-4xl mb-2">🏠</div>
+                  <div className="text-sm">No Image</div>
+                </div>
+              </div>
+            )}
+            
+            {/* Favorite Button */}
+            {showFavorite && currentRole === "buyer" && (
+              <button
+                onClick={handleFavoriteClick}
+                className={`absolute top-3 right-3 p-2 rounded-full transition-colors ${
+                  isFavorite 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                disabled={toggleFavoriteMutation.isPending}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+              </button>
+            )}
+
+            {/* Property Type Badge */}
+            <div className="absolute top-3 left-3">
+              <Badge className={getPropertyTypeColor(property.propertyType)}>
+                {property.propertyType}
+              </Badge>
+            </div>
+
+            {/* Price Badge */}
+            <div className="absolute bottom-3 left-3">
+              <Badge className="bg-white text-green-600 border-green-200 font-semibold">
+                {formatPrice(property.price)}
+              </Badge>
+            </div>
+          </div>
         </div>
-        {property.images && property.images.length > 1 && (
-          <Badge variant="secondary" className="absolute bottom-2 right-2 bg-black/60 text-white">
-            +{property.images.length - 1} more
-          </Badge>
-        )}
-        {showFavorite && user?.role === "buyer" && (
-          <div className="absolute top-4 right-4">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full"
-              onClick={handleFavorite}
-              disabled={favoriteMutation.isPending}
-            >
-              <Heart className={`h-4 w-4 ${isFavorited ? "fill-current text-red-500" : "text-neutral-600"}`} />
-            </Button>
-          </div>
-        )}
-      </div>
+      </Link>
 
-      <CardContent className="p-6">
-        <Link href={`/property/${property.id}`}>
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-xl font-semibold text-neutral-800">{property.title}</h3>
-            <span className="text-2xl font-bold text-primary">
-              LKR {parseFloat(property.price).toLocaleString()}
-              {property.status === 'rented' && <span className="text-base font-normal">/mo</span>}
-            </span>
-          </div>
-
-          <div className="flex items-center text-neutral-600 mb-4">
+      <CardContent className="p-4">
+        {/* Property Title and Location */}
+        <div className="mb-3">
+          <Link href={`/properties/${property.id}`}>
+            <h3 className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors mb-1">
+              {property.title}
+            </h3>
+          </Link>
+          <div className="flex items-center text-gray-600 text-sm">
             <MapPin className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.address}, {property.city}, {property.state} {property.zipCode}</span>
+            <span>{property.address}, {property.city}, {property.state}</span>
           </div>
+        </div>
 
-          <div className="flex items-center space-x-4 text-sm text-neutral-600 mb-4">
+        {/* Property Details */}
+        <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
+          <div className="flex items-center space-x-4">
             {property.bedrooms && (
               <div className="flex items-center">
                 <Bed className="h-4 w-4 mr-1" />
-                <span>{property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}</span>
+                <span>{property.bedrooms} beds</span>
               </div>
             )}
             {property.bathrooms && (
               <div className="flex items-center">
                 <Bath className="h-4 w-4 mr-1" />
-                <span>{property.bathrooms} bath{property.bathrooms !== 1 ? 's' : ''}</span>
+                <span>{property.bathrooms} baths</span>
               </div>
             )}
             {property.squareFeet && (
               <div className="flex items-center">
                 <Square className="h-4 w-4 mr-1" />
-                <span>{property.squareFeet.toLocaleString()} sq ft</span>
+                <span>{property.squareFeet} sq ft</span>
               </div>
             )}
           </div>
-        </Link>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={property.owner?.profileImageUrl} />
-              <AvatarFallback>
-                {property.owner?.firstName?.[0]}{property.owner?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium text-neutral-800">
-              {property.owner?.firstName} {property.owner?.lastName}
-            </span>
-          </div>
-          
-          {property.ownerId !== user?.id && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-primary hover:text-blue-700"
-              onClick={handleContact}
-              disabled={contactMutation.isPending}
-            >
-              {contactMutation.isPending ? 'Starting...' : 'Contact'}
-            </Button>
-          )}
         </div>
+
+        {/* Property Description */}
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+          {property.description}
+        </p>
+
+        {/* Amenities */}
+        {property.amenities && property.amenities.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-1">
+              {property.amenities.slice(0, 3).map((amenity, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {amenity}
+                </Badge>
+              ))}
+              {property.amenities.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{property.amenities.length - 3} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {showActions && (
+          <div className="flex gap-2">
+            <Link href={`/properties/${property.id}`} className="flex-1">
+              <Button className="w-full" size="sm">
+                View Details
+              </Button>
+            </Link>
+            
+            {showFavorite && currentRole === "buyer" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFavoriteClick}
+                disabled={toggleFavoriteMutation.isPending}
+                className="flex items-center gap-1"
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current text-red-500' : ''}`} />
+                {isFavorite ? 'Saved' : 'Save'}
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

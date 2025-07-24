@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import type { Property } from "@/types/property";
@@ -15,6 +16,7 @@ import { RoleBadge } from "@/components/ui/role-badge";
 export default function Home() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { currentRole } = useRoleSwitch();
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -58,114 +60,104 @@ export default function Home() {
           <div className="mb-8">
             {/* Role Badge */}
             <div className="mb-6">
-              <RoleBadge key={user?.role} />
+              <RoleBadge key={currentRole} />
             </div>
             
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Welcome back, {user?.firstName || user?.email}
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {user?.role === 'buyer' && "Discover your perfect home with our curated selection"}
-              {user?.role === 'seller' && "Manage your properties and connect with buyers"}
-              {user?.role === 'broker' && "Connect with clients and grow your business"}
+              {currentRole === 'buyer' && "Discover your perfect home with our curated selection"}
+              {currentRole === 'seller' && "Manage your properties and connect with buyers"}
+              {currentRole === 'broker' && "Connect with clients and grow your business"}
             </p>
           </div>
           
           {/* Main Action Button */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {user?.role === 'buyer' && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {currentRole === 'buyer' && (
               <Link href="/properties">
-                <div className="bg-blue-600 hover:bg-blue-700 px-8 py-3 text-lg rounded-md text-white font-medium flex items-center">
+                <Button size="lg" className="w-full sm:w-auto">
                   <Search className="mr-2 h-5 w-5" />
                   Browse Properties
-                </div>
+                </Button>
               </Link>
             )}
-            {(user?.role === 'seller' || user?.role === 'broker') && (
+            {(currentRole === 'seller' || currentRole === 'broker') && (
               <Link href="/add-property">
-                <div className="bg-blue-600 hover:bg-blue-700 px-8 py-3 text-lg rounded-md text-white font-medium flex items-center">
+                <Button size="lg" className="w-full sm:w-auto">
                   <Plus className="mr-2 h-5 w-5" />
                   Add Property
-                </div>
+                </Button>
               </Link>
             )}
-            <Link href="/properties">
-              <div className="px-8 py-3 text-lg rounded-md border border-gray-300 text-gray-700 font-medium flex items-center hover:bg-gray-50">
-                View All
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </div>
-            </Link>
           </div>
         </div>
       </section>
 
-      {/* Featured Properties - Minimal */}
-      {featuredProperties && featuredProperties.length > 0 && (
-        <section className="py-16 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                {user?.role === 'buyer' ? 'Featured Properties' : 'Recent Listings'}
-              </h2>
-              <p className="text-gray-600">
-                {user?.role === 'buyer' ? 'Handpicked for you' : 'Your latest additions'}
-              </p>
+      {/* Featured Properties Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {currentRole === 'buyer' ? 'Featured Properties' : 'Recent Listings'}
+            </h2>
+            <p className="text-lg text-gray-600">
+              {currentRole === 'buyer' ? 'Handpicked for you' : 'Your latest additions'}
+            </p>
+          </div>
+
+          {propertiesLoading ? (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
             </div>
+          ) : featuredProperties && featuredProperties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <HomeIcon className="h-16 w-16 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
+              <p className="text-gray-600 mb-6">
+                {currentRole === 'buyer' 
+                  ? "We're working on adding more properties for you."
+                  : "Start by adding your first property listing."
+                }
+              </p>
+              {currentRole === 'buyer' ? (
+                <Link href="/properties">
+                  <Button>
+                    <Search className="mr-2 h-4 w-4" />
+                    Browse All Properties
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/add-property">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Property
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
 
-            {propertiesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 animate-pulse">
-                    <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-                    <div className="p-6">
-                      <div className="h-4 bg-gray-200 rounded mb-3"></div>
-                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {featuredProperties.slice(0, 2).map((property: any) => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Quick Navigation */}
-      <section className="py-12 px-4 bg-white border-t border-gray-100">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/properties" className="w-full h-16 flex flex-col gap-2 hover:bg-gray-50 rounded-md p-2">
-              <HomeIcon className="h-6 w-6 text-blue-600" />
-              <span className="text-sm">Properties</span>
-            </Link>
-            <Link href="/messages" className="w-full h-16 flex flex-col gap-2 hover:bg-gray-50 rounded-md p-2">
-              <div className="h-6 w-6 text-blue-600 flex items-center justify-center">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-              <span className="text-sm">Messages</span>
-            </Link>
-            <Link href="/profile" className="w-full h-16 flex flex-col gap-2 hover:bg-gray-50 rounded-md p-2">
-              <div className="h-6 w-6 text-blue-600 flex items-center justify-center">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <span className="text-sm">Profile</span>
-            </Link>
-            {(user?.role === 'seller' || user?.role === 'broker') && (
-              <Link href="/add-property" className="w-full h-16 flex flex-col gap-2 hover:bg-gray-50 rounded-md p-2">
-                <Plus className="h-6 w-6 text-blue-600" />
-                <span className="text-sm">Add New</span>
+          {(currentRole === 'seller' || currentRole === 'broker') && (
+            <div className="text-center mt-12">
+              <Link href="/add-property">
+                <Button variant="outline" size="lg">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add More Properties
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 

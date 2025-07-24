@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +39,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function AddProperty() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { currentRole } = useRoleSwitch();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -60,17 +62,17 @@ export default function AddProperty() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  // Check if user can create properties
+  // Redirect if user is a buyer (only after role is loaded)
   useEffect(() => {
-    if (user && user.role === "buyer") {
+    if (currentRole && currentRole === "buyer") {
       toast({
         title: "Access Denied",
         description: "Only sellers and brokers can create property listings",
         variant: "destructive",
       });
-              router.push("/");
+      router.push("/");
     }
-      }, [user, router, toast]);
+  }, [currentRole, router, toast]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -78,7 +80,7 @@ export default function AddProperty() {
       title: "",
       description: "",
       price: "",
-      propertyType: "",
+      propertyType: undefined,
       address: "",
       city: "",
       state: "",
@@ -137,7 +139,7 @@ export default function AddProperty() {
     onSuccess: (property) => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       
-      if (user?.role === "seller" && needsBrokerServices) {
+      if (currentRole === "seller" && needsBrokerServices) {
         toast({
           title: "Property Listed with Broker Services",
           description: "Your property has been listed successfully. Our brokers will contact you soon to discuss professional services.",
@@ -196,7 +198,7 @@ export default function AddProperty() {
       squareFeet: data.squareFeet ? parseInt(data.squareFeet, 10) : null,
       images: imageUrls,
       amenities,
-      needsBrokerServices: user?.role === "seller" ? needsBrokerServices : null,
+              needsBrokerServices: currentRole === "seller" ? needsBrokerServices : null,
     };
 
     console.log('Final property data to submit:', propertyData);
@@ -229,7 +231,17 @@ export default function AddProperty() {
     return null;
   }
   
-  if (user?.role === "buyer") {
+  // Show loading while role is being determined
+  if (!currentRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+  
+  // Don't render if user is a buyer (they will be redirected by useEffect)
+  if (currentRole === "buyer") {
     return null;
   }
 
@@ -240,7 +252,7 @@ export default function AddProperty() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
                       <div className="flex justify-center mb-4">
-              <RoleBadge key={user?.role} />
+              <RoleBadge key={currentRole} />
             </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Add New Property</h1>
           <p className="text-lg text-neutral-600">Create a new property listing to attract potential buyers</p>
@@ -487,7 +499,7 @@ export default function AddProperty() {
                 </div>
 
                 {/* Broker Services Checkbox - Only for Sellers */}
-                {user?.role === "seller" && (
+                {currentRole === "seller" && (
                   <div className="space-y-4">
                     <div className="border-t border-gray-200 pt-6">
                       <div className="flex items-start space-x-3">

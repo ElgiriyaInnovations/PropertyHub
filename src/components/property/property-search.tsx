@@ -47,7 +47,7 @@ export default function PropertySearch() {
     };
   };
   
-  const [filters, setFilters] = useState<SearchFilters>(initializeFilters);
+  const [filters, setFilters] = useState<SearchFilters>(() => initializeFilters());
 
   const handleSearch = () => {
     const searchParams = new URLSearchParams();

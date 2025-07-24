@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import { RoleBadge } from "@/components/ui/role-badge";
 export default function Properties() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { currentRole } = useRoleSwitch();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
@@ -98,7 +100,7 @@ export default function Properties() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <RoleBadge key={user?.role} />
+              <RoleBadge key={currentRole} />
             </div>
             <h1 className="text-3xl font-bold text-neutral-800 mb-4">Find Your Perfect Property</h1>
             <p className="text-lg text-neutral-600">Discover properties that match your lifestyle and budget</p>
