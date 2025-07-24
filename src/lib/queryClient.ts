@@ -15,18 +15,13 @@ export async function apiRequest(
     ? endpoint 
     : `${process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') || ''}${endpoint}`;
 
-  // Add JWT token to requests if available
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  // Get user role from localStorage (tokens are in HTTP-only cookies)
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
   
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
   
   if (userRole) {
     headers['x-user-role'] = userRole;
@@ -68,13 +63,8 @@ export const getQueryFn: <T>(options: {
 
     console.log("Final URL:", url.toString());
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
     const headers: Record<string, string> = {};
-    
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
     
     if (userRole) {
       headers['x-user-role'] = userRole;

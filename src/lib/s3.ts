@@ -11,7 +11,9 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+const CLOUDFRONT_DOMAIN = process.env.AWS_CLOUDFRONT_DOMAIN;
 
+// Validate required environment variables
 if (!BUCKET_NAME) {
   throw new Error('AWS_S3_BUCKET_NAME environment variable is required');
 }
@@ -45,7 +47,10 @@ export class S3Service {
 
     await s3Client.send(command);
 
-    const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+    // Use CloudFront domain if available, otherwise use S3 direct URL
+    const url = CLOUDFRONT_DOMAIN 
+      ? `https://${CLOUDFRONT_DOMAIN}/${key}`
+      : `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
 
     return { key, url };
   }

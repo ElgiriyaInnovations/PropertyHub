@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,5 +8,5 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const sqlite = new Database(process.env.DATABASE_URL.replace('file:', ''));
-export const db = drizzle(sqlite, { schema });
+const sql = neon(process.env.DATABASE_URL);
+export const db = drizzle(sql, { schema });

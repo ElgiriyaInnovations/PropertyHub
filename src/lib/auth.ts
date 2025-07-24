@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { storage } from './storage';
 
 // JWT configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-change-in-production';
+
 const JWT_EXPIRES_IN = '15m'; // Access token expires in 15 minutes
 const REFRESH_TOKEN_EXPIRES_IN = '7d'; // Refresh token expires in 7 days
 
@@ -60,7 +62,7 @@ export async function authenticateJWT(request: NextRequest) {
     
     // If no token in header, try to get from cookies
     if (!token) {
-      token = request.cookies.get('accessToken')?.value;
+      token = request.cookies.get('accessToken')?.value || null;
     }
     
     console.log('Auth header received:', authHeader ? 'Bearer ***' : 'None');

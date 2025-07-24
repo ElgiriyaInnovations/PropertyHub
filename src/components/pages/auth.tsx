@@ -68,14 +68,10 @@ export default function Auth() {
         title: "Login Successful",
         description: `Welcome back, ${data.user?.firstName || 'User'}! You can switch your role anytime from the navigation bar.`,
       });
-      // Set token in localStorage for API requests
-      localStorage.setItem('accessToken', data.accessToken);
-      // Set default role as buyer
+      // Set default role as buyer (tokens are in HTTP-only cookies)
       localStorage.setItem('userRole', 'buyer');
-      // Small delay to ensure token is set, then navigate
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 100);
+      // Navigate to home page
+      window.location.href = "/";
     },
     onError: (error: any) => {
       toast({

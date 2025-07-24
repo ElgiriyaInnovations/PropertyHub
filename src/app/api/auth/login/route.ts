@@ -38,11 +38,10 @@ export async function POST(request: NextRequest) {
     const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await storage.updateRefreshToken(user.id, refreshToken, refreshTokenExpiry);
 
-    // Create response
+    // Create response (don't include tokens in response body for security)
     const response = NextResponse.json({
       message: "Login successful",
       user: { ...user, role: "buyer" }, // Default to buyer, can be changed client-side
-      accessToken,
     });
 
     // Set cookies

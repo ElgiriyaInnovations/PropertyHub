@@ -1,27 +1,30 @@
 import {
-  sqliteTable,
+  pgTable,
   text,
   integer,
   real,
-  blob,
+  jsonb,
+  timestamp,
+  boolean,
   index,
-} from "drizzle-orm/sqlite-core";
+  serial,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Session storage table (required for Replit Auth)
-export const sessions = sqliteTable(
+export const sessions = pgTable(
   "sessions",
   {
     sid: text("sid").primaryKey(),
-    sess: blob("sess").notNull(),
-    expire: integer("expire", { mode: 'timestamp' }).notNull(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
   },
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
 // User storage table with JWT authentication
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey().notNull(),
   email: text("email").unique().notNull(),
   password: text("password"), // for local auth
@@ -36,17 +39,17 @@ export const users = sqliteTable("users", {
   linkedinId: text("linkedin_id").unique(),
   // JWT refresh tokens
   refreshToken: text("refresh_token"),
-  refreshTokenExpiry: integer("refresh_token_expiry", { mode: 'timestamp' }),
-  emailVerified: integer("email_verified", { mode: 'boolean' }).default(false),
+  refreshTokenExpiry: timestamp("refresh_token_expiry"),
+  emailVerified: boolean("email_verified").default(false),
   resetPasswordToken: text("reset_password_token"),
-  resetPasswordExpiry: integer("reset_password_expiry", { mode: 'timestamp' }),
-  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
-  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
+  resetPasswordExpiry: timestamp("reset_password_expiry"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Properties table
-export const properties = sqliteTable("properties", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const properties = pgTable("properties", {
+  id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   price: real("price").notNull(),
@@ -65,39 +68,39 @@ export const properties = sqliteTable("properties", {
   zipCode: text("zip_code").notNull(),
   latitude: real("latitude"),
   longitude: real("longitude"),
-  images: blob("images", { mode: 'json' }).$type<string[]>().default([]),
-  amenities: blob("amenities", { mode: 'json' }).$type<string[]>().default([]),
-  needsBrokerServices: integer("needs_broker_services", { mode: 'boolean' }),
+  images: jsonb("images").$type<string[]>().default([]),
+  amenities: jsonb("amenities").$type<string[]>().default([]),
+  needsBrokerServices: boolean("needs_broker_services"),
   ownerId: text("owner_id").references(() => users.id).notNull(),
-  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
-  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Property inquiries/favorites
-export const propertyFavorites = sqliteTable("property_favorites", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const propertyFavorites = pgTable("property_favorites", {
+  id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
   propertyId: integer("property_id").references(() => properties.id).notNull(),
-  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Messages/conversations
-export const conversations = sqliteTable("conversations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
   participant1Id: text("participant1_id").references(() => users.id).notNull(),
   participant2Id: text("participant2_id").references(() => users.id).notNull(),
   propertyId: integer("property_id").references(() => properties.id),
-  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
-  updatedAt: integer("updated_at", { mode: 'timestamp' }).defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const messages = sqliteTable("messages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
   conversationId: integer("conversation_id").references(() => conversations.id).notNull(),
   senderId: text("sender_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
-  isRead: integer("is_read", { mode: 'boolean' }).default(false),
-  createdAt: integer("created_at", { mode: 'timestamp' }).defaultNow(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
