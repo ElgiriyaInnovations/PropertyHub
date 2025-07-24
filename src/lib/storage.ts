@@ -15,7 +15,7 @@ import {
   type PropertyFavorite,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, ilike, gte, lte, sql, leftJoin } from "drizzle-orm";
+import { eq, and, or, desc, asc, ilike, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (JWT Auth)
@@ -141,16 +141,8 @@ export class DatabaseStorage implements IStorage {
       needsBrokerServices: properties.needsBrokerServices,
       ownerId: properties.ownerId,
       createdAt: properties.createdAt,
-      updatedAt: properties.updatedAt,
-      owner: {
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        phone: users.phone,
-        profileImageUrl: users.profileImageUrl,
-      }
-    }).from(properties).leftJoin(users, eq(properties.ownerId, users.id));
+      updatedAt: properties.updatedAt
+    }).from(properties);
 
     const conditions = [];
 
@@ -247,16 +239,8 @@ export class DatabaseStorage implements IStorage {
       needsBrokerServices: properties.needsBrokerServices,
       ownerId: properties.ownerId,
       createdAt: properties.createdAt,
-      updatedAt: properties.updatedAt,
-      owner: {
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        phone: users.phone,
-        profileImageUrl: users.profileImageUrl,
-      }
-    }).from(properties).leftJoin(users, eq(properties.ownerId, users.id)).where(eq(properties.id, id));
+      updatedAt: properties.updatedAt
+    }).from(properties).where(eq(properties.id, id));
     return property;
   }
 
@@ -449,9 +433,6 @@ export class DatabaseStorage implements IStorage {
         property: properties,
       })
       .from(conversations)
-      .leftJoin(users, eq(conversations.participant2Id, users.id))
-      .leftJoin(sql`users p1`, sql`${conversations.participant1Id} = p1.id`)
-      .leftJoin(properties, eq(conversations.propertyId, properties.id))
       .where(
         or(
           eq(conversations.participant1Id, userId),
