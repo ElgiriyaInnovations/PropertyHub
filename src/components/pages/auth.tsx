@@ -131,12 +131,19 @@ export default function Auth() {
           <div className="flex justify-center mb-4">
             <img 
               src="/assets/prop-logo.png" 
-              alt="PropertyHub Logo" 
+              alt="Elgiriya Properties Logo" 
               width={32} 
               height={32} 
               className="rounded"
-              loading="eager"
+              onError={(e) => {
+                console.log('Logo failed to load, using fallback');
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'flex';
+              }}
             />
+            <div className="w-8 h-8 bg-blue-600 rounded items-center justify-center hidden">
+              <span className="text-white font-bold text-sm">EP</span>
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold text-primary">Elgiriya Properties</CardTitle>
           <CardDescription>
