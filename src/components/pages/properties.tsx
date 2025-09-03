@@ -130,25 +130,8 @@ export default function Properties() {
       <Header />
       
       {/* Hero Section with Search */}
-      <section className="bg-white shadow-sm py-8">
+      <section className="bg-white shadow-sm py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Role indicator for sellers and brokers */}
-          {currentRole === 'seller' && (
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                <span className="mr-2">📋</span>
-                Seller Dashboard - Viewing Your Listings
-              </div>
-            </div>
-          )}
-          {currentRole === 'broker' && (
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                <span className="mr-2">👔</span>
-                Broker Dashboard - Properties Needing Broker Services
-              </div>
-            </div>
-          )}
           <LandingImage
             title={
               currentRole === 'seller' ? "My Property Listings" : 

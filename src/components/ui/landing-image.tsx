@@ -76,19 +76,19 @@ export function LandingImage({
       <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
         {/* Role Badge */}
         {role && (
-          <div className={`inline-flex items-center px-6 py-3 ${roleConfig.bgColor} ${roleConfig.textColor} rounded-full text-sm font-medium mb-8 border border-current/20 backdrop-blur-md`}>
+          <div className={`inline-flex items-center px-6 py-3 ${roleConfig.bgColor} ${roleConfig.textColor} rounded-full text-sm font-medium mb-4 border border-current/20 backdrop-blur-md`}>
             <Icon className="h-4 w-4 mr-2" />
             <span className="capitalize">{role}</span>
           </div>
         )}
         
         {/* Main Heading */}
-        <h1 className={`text-4xl md:text-6xl font-bold mb-6 leading-tight ${showBackground ? 'text-white' : 'text-gray-900'}`}>
+        <h1 className={`text-4xl md:text-6xl font-bold mb-4 leading-tight ${showBackground ? 'text-white' : 'text-gray-900'}`}>
           {title}
         </h1>
         
         {/* Subtitle */}
-        <p className={`text-xl md:text-2xl mb-8 leading-relaxed ${showBackground ? 'text-gray-200' : 'text-gray-600'} max-w-2xl mx-auto`}>
+        <p className={`text-xl md:text-2xl mb-6 leading-relaxed ${showBackground ? 'text-gray-200' : 'text-gray-600'} max-w-2xl mx-auto`}>
           {subtitle}
         </p>
         

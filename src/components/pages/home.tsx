@@ -77,11 +77,11 @@ export default function Home() {
         }
         role={currentRole}
         showBackground={false}
-        className="py-20"
+        className="py-12"
       />
       
       {/* Action Buttons */}
-      <section className="py-8 px-4">
+      <section className="py-6 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {currentRole === 'buyer' && (
@@ -105,7 +105,7 @@ export default function Home() {
       </section>
 
       {/* Featured Properties Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">

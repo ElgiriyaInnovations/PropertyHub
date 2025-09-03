@@ -48,7 +48,12 @@ export function RoleSwitcher() {
 
   if (!user) return null;
 
-  const currentRoleConfig = roleConfig[currentRole as keyof typeof roleConfig];
+  // Ensure currentRole is valid, default to 'buyer' if undefined
+  const validRole = currentRole && roleConfig[currentRole as keyof typeof roleConfig] 
+    ? currentRole 
+    : 'buyer';
+  
+  const currentRoleConfig = roleConfig[validRole as keyof typeof roleConfig];
   const CurrentIcon = currentRoleConfig.icon;
 
   return (
@@ -65,7 +70,6 @@ export function RoleSwitcher() {
           ) : (
             <CurrentIcon className="h-4 w-4" />
           )}
-          <span className="hidden sm:inline">{currentRoleConfig.label}</span>
           <Badge 
             variant="secondary" 
             className={`text-xs ${currentRoleConfig.color} border`}
@@ -80,7 +84,7 @@ export function RoleSwitcher() {
         
         {Object.entries(roleConfig).map(([roleKey, roleInfo]) => {
           const Icon = roleInfo.icon;
-          const isActive = currentRole === roleKey;
+          const isActive = validRole === roleKey;
           
           return (
             <DropdownMenuItem

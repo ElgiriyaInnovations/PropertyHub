@@ -111,11 +111,11 @@ export default function Messages() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-                      <div className="flex justify-center mb-4">
-              <RoleBadge key={currentRole} />
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mb-6">
+          <div className="flex justify-center mb-3">
+            <RoleBadge key={currentRole} />
+          </div>
           <h1 className="text-3xl font-bold text-neutral-800 mb-2">Messages</h1>
           <p className="text-lg text-neutral-600">Connect with buyers, sellers, and brokers</p>
         </div>

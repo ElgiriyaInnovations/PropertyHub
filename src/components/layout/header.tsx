@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { RoleSwitcher } from "@/components/ui/role-switcher";
 
 import { 
   DropdownMenu, 
@@ -65,7 +66,7 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/properties", label: "Properties", icon: Search },
-    { href: "/market-insights", label: "Market Insights", icon: TrendingUp },
+    // { href: "/market-insights", label: "Market Insights", icon: TrendingUp }, // Hidden for now
   ];
 
   // Add role-specific nav items
@@ -128,61 +129,7 @@ export default function Header() {
               </Link>
 
               {/* Role Switcher */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className={`flex items-center gap-2 transition-all duration-200 ${
-                      currentRole === 'buyer' ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100' :
-                      currentRole === 'seller' ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100' :
-                      currentRole === 'broker' ? 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100' :
-                      'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="text-sm">
-                      {currentRole === 'buyer' && '🏠'}
-                      {currentRole === 'seller' && '📋'}
-                      {currentRole === 'broker' && '👔'}
-                    </span>
-                    <span className="hidden sm:inline text-sm font-medium capitalize">
-                      {currentRole}
-                    </span>
-                    {isUpdating && <Loader2 className="h-3 w-3 animate-spin" />}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Switch Role</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {["buyer", "seller", "broker"].map((role) => {
-                    const isActive = currentRole === role;
-                    const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-                    const roleIcons = {
-                      buyer: "🏠",
-                      seller: "📋", 
-                      broker: "👔"
-                    };
-                    return (
-                      <DropdownMenuItem
-                        key={role}
-                        onClick={() => {
-                          if (currentRole !== role) {
-                            switchRole(role as "buyer" | "seller" | "broker");
-                          }
-                        }}
-                        disabled={isUpdating}
-                        className="flex items-center justify-between cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{roleIcons[role as keyof typeof roleIcons]}</span>
-                          <span>{roleLabel}</span>
-                        </div>
-                        {isActive && <span className="text-xs text-green-600 font-medium">Active</span>}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RoleSwitcher />
 
               {/* User Menu */}
               <DropdownMenu>
@@ -198,14 +145,6 @@ export default function Header() {
                       <p className="text-sm font-medium text-neutral-800">
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-600 capitalize">{currentRole}</span>
-                        <span className="text-xs">
-                          {currentRole === 'buyer' && '🏠'}
-                          {currentRole === 'seller' && '📋'}
-                          {currentRole === 'broker' && '👔'}
-                        </span>
-                      </div>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -277,48 +216,8 @@ export default function Header() {
                 {/* Role Switcher for Mobile */}
                 <div className="px-3 py-2 border-b border-neutral-200 pb-4 mb-4">
                   <div className="text-sm font-medium text-neutral-700 mb-3">Switch Role</div>
-                  <div className="space-y-2">
-                    {["buyer", "seller", "broker"].map((role) => {
-                      const isActive = currentRole === role;
-                      const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-                      const roleIcons = {
-                        buyer: "🏠",
-                        seller: "📋", 
-                        broker: "👔"
-                      };
-                      return (
-                        <button
-                          key={role}
-                          onClick={() => {
-                            if (currentRole !== role) {
-                              switchRole(role as "buyer" | "seller" | "broker");
-                            }
-                            setMobileMenuOpen(false);
-                          }}
-                          disabled={isUpdating}
-                          className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                            isActive
-                              ? role === 'buyer' ? "bg-blue-500 text-white shadow-md" :
-                                role === 'seller' ? "bg-green-500 text-white shadow-md" :
-                                role === 'broker' ? "bg-purple-500 text-white shadow-md" :
-                                "bg-blue-500 text-white shadow-md"
-                              : role === 'buyer' ? "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-blue-200" :
-                                role === 'seller' ? "text-neutral-800 hover:bg-green-50 hover:text-green-600 border border-green-200" :
-                                role === 'broker' ? "text-neutral-800 hover:bg-purple-50 hover:text-purple-600 border border-purple-200" :
-                                "text-neutral-800 hover:bg-blue-50 hover:text-blue-600 border border-gray-200"
-                          } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-lg">{roleIcons[role as keyof typeof roleIcons]}</span>
-                            <span>{roleLabel}</span>
-                          </div>
-                          {isActive && <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Active</span>}
-                          {isUpdating && currentRole !== role && (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="flex justify-center">
+                    <RoleSwitcher />
                   </div>
                 </div>
                 

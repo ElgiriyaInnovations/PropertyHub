@@ -222,7 +222,7 @@ export default function PropertyDetail() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           <Card>
             <CardContent className="p-8 text-center">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h1>
@@ -246,9 +246,9 @@ export default function PropertyDetail() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Role Badge */}
-        <div className="mb-6">
+        <div className="mb-4">
           <RoleBadge key={currentRole} />
         </div>
 

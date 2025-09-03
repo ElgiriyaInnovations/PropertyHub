@@ -450,6 +450,12 @@ export default function Landing() {
                   size="lg" 
                   variant="outline" 
                   className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold"
+                  onClick={() => {
+                    const featuresSection = document.getElementById('features');
+                    if (featuresSection) {
+                      featuresSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   Learn More
                 </Button>
