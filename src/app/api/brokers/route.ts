@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { brokers, users } from "shared/schema";
 import { eq, and, like, or } from "drizzle-orm";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

@@ -3,6 +3,9 @@ import { storage } from "@/lib/storage";
 import { clearTokenCookies } from "@/lib/auth";
 import { authenticateJWT } from "@/lib/auth";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = await authenticateJWT(request);

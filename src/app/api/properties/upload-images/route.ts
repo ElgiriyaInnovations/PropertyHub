@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateJWT } from "@/lib/auth";
 import { S3Service } from "@/lib/s3";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user

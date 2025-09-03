@@ -5,6 +5,9 @@ import { insertBrokerSchema } from "shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateJWT } from "@/lib/auth";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Check if user is authenticated
