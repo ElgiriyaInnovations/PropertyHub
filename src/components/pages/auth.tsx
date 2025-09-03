@@ -129,24 +129,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img 
-              src="/assets/prop-logo.png" 
-              alt="Elgiriya Properties Logo" 
-              width={32} 
-              height={32} 
-              className="rounded"
-              onError={(e) => {
-                console.log('Logo failed to load, using fallback');
-                e.currentTarget.style.display = 'none';
-                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                if (nextElement) {
-                  nextElement.style.display = 'flex';
-                }
-              }}
-            />
-            <div className="w-8 h-8 bg-blue-600 rounded items-center justify-center hidden">
-              <span className="text-white font-bold text-sm">EP</span>
-            </div>
+            {/* Logo removed for signed-off users */}
           </div>
           <CardTitle className="text-2xl font-bold text-primary">Elgiriya Properties</CardTitle>
           <CardDescription>

@@ -16,24 +16,6 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <img 
-                src="/assets/prop-logo.png" 
-                alt="Elgiriya Properties Logo" 
-                width={32} 
-                height={32} 
-                className="mr-2 rounded"
-                onError={(e) => {
-                  console.log('Logo failed to load, using fallback');
-                  e.currentTarget.style.display = 'none';
-                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (nextElement) {
-                    nextElement.style.display = 'flex';
-                  }
-                }}
-              />
-              <div className="w-8 h-8 mr-2 bg-blue-600 rounded items-center justify-center hidden">
-                <span className="text-white font-bold text-sm">EP</span>
-              </div>
               <h1 className="text-2xl font-bold text-primary">Elgiriya Properties</h1>
             </div>
             
@@ -641,9 +623,6 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 mr-2 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">EP</span>
-                </div>
                 <h3 className="text-2xl font-bold text-primary">Elgiriya Properties</h3>
               </div>
               <p className="text-neutral-400 mb-4">Your trusted platform for connecting buyers, sellers, and brokers in the real estate market.</p>
