@@ -186,10 +186,10 @@ export default function BrokerRegistration() {
   };
 
   const addToArray = (field: keyof BrokerFormData, value: string) => {
-    if (value && !formData[field].includes(value)) {
+    if (value && Array.isArray(formData[field]) && !formData[field].includes(value)) {
       setFormData(prev => ({
         ...prev,
-        [field]: [...prev[field], value]
+        [field]: [...(prev[field] as string[]), value]
       }));
     }
   };
@@ -197,7 +197,7 @@ export default function BrokerRegistration() {
   const removeFromArray = (field: keyof BrokerFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field].filter(item => item !== value)
+      [field]: (prev[field] as string[]).filter(item => item !== value)
     }));
   };
 
