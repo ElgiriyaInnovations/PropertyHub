@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Home, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -9,8 +10,14 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center mb-4">
-              <Home className="h-8 w-8 text-primary mr-2" />
-              <h3 className="text-2xl font-bold text-primary">PropertyHub</h3>
+              <Image 
+                src="/assets/prop-logo.jpg" 
+                alt="PropertyHub Logo" 
+                width={32} 
+                height={32} 
+                className="mr-2 rounded"
+              />
+              <h3 className="text-2xl font-bold text-white">Elgiriya Properties</h3>
             </div>
             <p className="text-neutral-400 mb-4">
               Your trusted platform for connecting buyers, sellers, and brokers in the real estate market.
@@ -96,7 +103,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
-          <p>&copy; 2025 PropertyHub Powered By Elgiriya Innovations. All rights reserved.</p>
+          <p>&copy; 2025 Elgiriya Properties Powered By Elgiriya Innovations. All rights reserved.</p>
         </div>
       </div>
     </footer>

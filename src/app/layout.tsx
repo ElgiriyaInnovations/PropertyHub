@@ -6,8 +6,8 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PropertyHub - Real Estate Platform",
-  description: "Find your dream property with PropertyHub",
+  title: "Elgiriya Properties - Real Estate Platform",
+  description: "Find your dream property with Elgiriya Properties",
 };
 
 export default function RootLayout({

@@ -30,6 +30,7 @@ import {
   Loader2,
   TrendingUp
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
@@ -65,7 +66,8 @@ export default function Header() {
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/properties", label: "Properties", icon: Search },
+    // Only show Properties for non-seller roles
+    ...(currentRole !== 'seller' ? [{ href: "/properties", label: "Properties", icon: Search }] : []),
     // { href: "/market-insights", label: "Market Insights", icon: TrendingUp }, // Hidden for now
   ];
 
@@ -86,14 +88,44 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <Home className="h-8 w-8 text-primary mr-2" />
-            <h1 className="text-2xl font-bold text-primary">PropertyHub</h1>
+            <Image 
+              src="/assets/prop-logo.jpg" 
+              alt="PropertyHub Logo" 
+              width={32} 
+              height={32} 
+              className="mr-2 rounded"
+            />
+            <h1 className="text-2xl font-bold text-primary">Elgiriya Properties</h1>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navItems.map((item) => {
               const Icon = item.icon;
+              
+              // Special handling for Properties link on home page (only if Properties exists in navItems)
+              if (item.href === "/properties" && pathname === "/") {
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      const propertiesSection = document.getElementById('featured-properties');
+                      if (propertiesSection) {
+                        propertiesSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive(item.href)
+                        ? "text-primary bg-blue-50"
+                        : "text-neutral-800 hover:text-primary hover:bg-neutral-50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              }
+              
               return (
                 <Link 
                   key={item.href} 

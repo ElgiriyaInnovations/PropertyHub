@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Search, Home, Handshake, Camera, TrendingUp, Users } from "lucide-react";
+import Image from "next/image";
 
 export default function Landing() {
   const handleLogin = () => {
@@ -15,8 +16,14 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Home className="h-8 w-8 text-primary mr-2" />
-              <h1 className="text-2xl font-bold text-primary">PropertyHub</h1>
+              <Image 
+                src="/assets/prop-logo.jpg" 
+                alt="PropertyHub Logo" 
+                width={32} 
+                height={32} 
+                className="mr-2 rounded"
+              />
+              <h1 className="text-2xl font-bold text-primary">Elgiriya Properties</h1>
             </div>
             
             <nav className="hidden md:flex space-x-8">
@@ -322,7 +329,7 @@ export default function Landing() {
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">How It Works</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Getting started with PropertyHub is simple. Follow these three easy steps to find your perfect property or list your own.
+              Getting started with Elgiriya Properties is simple. Follow these three easy steps to find your perfect property or list your own.
             </p>
           </div>
 
@@ -391,7 +398,7 @@ export default function Landing() {
 
           {/* Additional Features with improved design */}
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PropertyHub?</h3>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Elgiriya Properties?</h3>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Discover the features that make us the preferred choice for real estate transactions
             </p>
@@ -471,7 +478,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-neutral-800 mb-4">Get In Touch</h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Have questions about PropertyHub? We're here to help you navigate the real estate market with confidence.
+              Have questions about Elgiriya Properties? We're here to help you navigate the real estate market with confidence.
             </p>
           </div>
 
@@ -623,8 +630,14 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <Home className="h-8 w-8 text-primary mr-2" />
-                <h3 className="text-2xl font-bold text-primary">PropertyHub</h3>
+                <Image 
+                  src="/assets/prop-logo.jpg" 
+                  alt="PropertyHub Logo" 
+                  width={32} 
+                  height={32} 
+                  className="mr-2 rounded"
+                />
+                <h3 className="text-2xl font-bold text-primary">Elgiriya Properties</h3>
               </div>
               <p className="text-neutral-400 mb-4">Your trusted platform for connecting buyers, sellers, and brokers in the real estate market.</p>
             </div>
@@ -661,7 +674,7 @@ export default function Landing() {
           </div>
 
           <div className="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
-            <p>&copy; 2025 PropertyHub Powered By Elgiriya Innovations. All rights reserved.</p>
+            <p>&copy; 2025 Elgiriya Properties Powered By Elgiriya Innovations. All rights reserved.</p>
           </div>
         </div>
       </footer>

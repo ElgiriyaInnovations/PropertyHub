@@ -7,6 +7,8 @@ import { useRoleSwitch } from "@/hooks/useRoleSwitch";
 import { RoleSwitcher } from "@/components/ui/role-switcher";
 import { Home, LogOut, User } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,7 @@ export default function AuthHeader() {
   const { user } = useAuth();
   const { currentRole } = useRoleSwitch();
   const { toast } = useToast();
+  const pathname = usePathname();
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -50,14 +53,36 @@ export default function AuthHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center">
-            <Home className="h-8 w-8 text-primary mr-2" />
-            <h1 className="text-2xl font-bold text-primary">PropertyHub</h1>
+            <Image 
+              src="/assets/prop-logo.jpg" 
+              alt="PropertyHub Logo" 
+              width={32} 
+              height={32} 
+              className="mr-2 rounded"
+            />
+            <h1 className="text-2xl font-bold text-primary">Elgiriya Properties</h1>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/properties" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-              Properties
-            </Link>
+            {currentRole !== 'seller' && (
+              pathname === "/" ? (
+                <button 
+                  onClick={() => {
+                    const propertiesSection = document.getElementById('featured-properties');
+                    if (propertiesSection) {
+                      propertiesSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                >
+                  Properties
+                </button>
+              ) : (
+                <Link href="/properties" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                  Properties
+                </Link>
+              )
+            )}
             {/* Market Insights hidden for now
             {currentRole === 'buyer' && (
               <Link href="/market-insights" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">

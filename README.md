@@ -1,4 +1,4 @@
-# PropertyHub - Next.js Version
+# Elgiriya Properties - Next.js Version
 
 A modern real estate platform built with Next.js, TypeScript, and Tailwind CSS.
 
@@ -35,7 +35,7 @@ A modern real estate platform built with Next.js, TypeScript, and Tailwind CSS.
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd PropertyHub
+cd Elgiriya-Properties
 ```
 
 2. Install dependencies:

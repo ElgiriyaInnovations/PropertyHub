@@ -73,7 +73,7 @@ export default function Home() {
           currentRole === 'buyer' ? "Discover your perfect home with our curated selection" :
           currentRole === 'seller' ? "Manage your properties and connect with buyers" :
           currentRole === 'broker' ? "Connect with clients and grow your business" :
-          "Welcome to PropertyHub"
+          "Welcome to Elgiriya Properties"
         }
         role={currentRole}
         showBackground={false}
@@ -85,12 +85,19 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {currentRole === 'buyer' && (
-              <Link href="/properties">
-                <Button size="lg" className="w-full sm:w-auto">
-                  <Search className="mr-2 h-5 w-5" />
-                  Browse Properties
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  const propertiesSection = document.getElementById('featured-properties');
+                  if (propertiesSection) {
+                    propertiesSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                <Search className="mr-2 h-5 w-5" />
+                Browse Properties
+              </Button>
             )}
             {(currentRole === 'seller' || currentRole === 'broker') && (
               <Link href="/add-property">
@@ -105,7 +112,7 @@ export default function Home() {
       </section>
 
       {/* Featured Properties Section */}
-      <section className="py-12 px-4">
+      <section id="featured-properties" className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">

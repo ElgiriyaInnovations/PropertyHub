@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Home } from "lucide-react";
+import Image from "next/image";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -128,9 +129,15 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Home className="h-8 w-8 text-primary" />
+            <Image 
+              src="/assets/prop-logo.jpg" 
+              alt="PropertyHub Logo" 
+              width={32} 
+              height={32} 
+              className="rounded"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold text-primary">PropertyHub</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Elgiriya Properties</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
           </CardDescription>
