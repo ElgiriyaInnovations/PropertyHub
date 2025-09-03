@@ -25,7 +25,10 @@ export default function Landing() {
                 onError={(e) => {
                   console.log('Logo failed to load, using fallback');
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'flex';
+                  }
                 }}
               />
               <div className="w-8 h-8 mr-2 bg-blue-600 rounded items-center justify-center hidden">
