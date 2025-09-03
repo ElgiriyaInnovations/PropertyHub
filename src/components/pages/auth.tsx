@@ -130,7 +130,7 @@ export default function Auth() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Image 
-              src="/assets/prop-logo.jpg" 
+              src="/assets/prop-logo.png" 
               alt="PropertyHub Logo" 
               width={32} 
               height={32} 

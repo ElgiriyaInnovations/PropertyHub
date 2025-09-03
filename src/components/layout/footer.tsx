@@ -11,7 +11,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <Image 
-                src="/assets/prop-logo.jpg" 
+                src="/assets/prop-logo.png" 
                 alt="PropertyHub Logo" 
                 width={32} 
                 height={32} 

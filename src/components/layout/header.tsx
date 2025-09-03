@@ -97,7 +97,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image 
-              src="/assets/prop-logo.jpg" 
+              src="/assets/prop-logo.png" 
               alt="PropertyHub Logo" 
               width={32} 
               height={32} 

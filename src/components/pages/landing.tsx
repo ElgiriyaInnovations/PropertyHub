@@ -17,7 +17,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Image 
-                src="/assets/prop-logo.jpg" 
+                src="/assets/prop-logo.png" 
                 alt="PropertyHub Logo" 
                 width={32} 
                 height={32} 
@@ -631,7 +631,7 @@ export default function Landing() {
             <div>
               <div className="flex items-center mb-4">
                 <Image 
-                  src="/assets/prop-logo.jpg" 
+                  src="/assets/prop-logo.png" 
                   alt="PropertyHub Logo" 
                   width={32} 
                   height={32} 
