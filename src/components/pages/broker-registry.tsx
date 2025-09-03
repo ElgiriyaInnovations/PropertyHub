@@ -70,8 +70,8 @@ export default function BrokerRegistry() {
   });
 
   // Get unique locations and specialties from the fetched data
-  const locations = [...new Set(brokers.map(broker => broker.location))];
-  const specialties = [...new Set(brokers.flatMap(broker => broker.specialties))];
+  const locations = Array.from(new Set(brokers.map(broker => broker.location)));
+  const specialties = Array.from(new Set(brokers.flatMap(broker => broker.specialties)));
 
   const handleContactBroker = (broker: Broker) => {
     // In a real app, this would open a messaging interface or contact form
