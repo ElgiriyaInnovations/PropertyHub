@@ -28,7 +28,8 @@ import {
   Menu,
   X,
   Loader2,
-  TrendingUp
+  TrendingUp,
+  Users
 } from "lucide-react";
 import Image from "next/image";
 
@@ -71,10 +72,17 @@ export default function Header() {
     // { href: "/market-insights", label: "Market Insights", icon: TrendingUp }, // Hidden for now
   ];
 
-  // Add role-specific nav items
-  if (currentRole === "seller" || currentRole === "broker") {
-    navItems.push({ href: "/add-property", label: "Add Property", icon: Plus });
-  }
+        // Add role-specific nav items
+      if (currentRole === "seller") {
+        navItems.push({ href: "/broker-registry", label: "Broker Registry", icon: Users });
+      }
+      if (currentRole === "seller" || currentRole === "broker") {
+        navItems.push({ href: "/add-property", label: "Add Property", icon: Plus });
+      }
+      // Add broker registration for all authenticated users
+      if (user) {
+        navItems.push({ href: "/broker-registration", label: "Become a Broker", icon: Users });
+      }
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;

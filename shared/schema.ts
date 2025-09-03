@@ -84,6 +84,32 @@ export const propertyFavorites = pgTable("property_favorites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Brokers table - separate from users for broker-specific information
+export const brokers = pgTable("brokers", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id).notNull().unique(),
+  licenseNumber: text("license_number").notNull().unique(),
+  experience: integer("experience").notNull(), // years of experience
+  specialties: jsonb("specialties").$type<string[]>().notNull().default([]),
+  certifications: jsonb("certifications").$type<string[]>().default([]),
+  languages: jsonb("languages").$type<string[]>().default([]),
+  location: text("location").notNull(),
+  serviceAreas: jsonb("service_areas").$type<string[]>().default([]),
+  commissionRate: real("commission_rate"), // percentage
+  bio: text("bio"),
+  profileImageUrl: text("profile_image_url"),
+  phone: text("phone"),
+  website: text("website"),
+  linkedin: text("linkedin"),
+  rating: real("rating").default(0),
+  totalSales: integer("total_sales").default(0),
+  totalReviews: integer("total_reviews").default(0),
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Messages/conversations
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
@@ -104,12 +130,16 @@ export const messages = pgTable("messages", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   properties: many(properties),
   favorites: many(propertyFavorites),
   sentMessages: many(messages),
   conversations1: many(conversations, { relationName: "participant1" }),
   conversations2: many(conversations, { relationName: "participant2" }),
+  brokerProfile: one(brokers, {
+    fields: [users.id],
+    references: [brokers.userId],
+  }),
 }));
 
 export const propertiesRelations = relations(properties, ({ one, many }) => ({
@@ -157,6 +187,13 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
   sender: one(users, {
     fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
+
+export const brokersRelations = relations(brokers, ({ one }) => ({
+  user: one(users, {
+    fields: [brokers.userId],
     references: [users.id],
   }),
 }));
@@ -211,3 +248,31 @@ export type Message = typeof messages.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Conversation = typeof conversations.$inferSelect;
 export type PropertyFavorite = typeof propertyFavorites.$inferSelect;
+
+// Broker schemas
+export const insertBrokerSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  licenseNumber: z.string().min(1, "License number is required"),
+  experience: z.number().min(0, "Experience must be non-negative"),
+  specialties: z.array(z.string()).min(1, "At least one specialty is required"),
+  certifications: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default([]),
+  location: z.string().min(1, "Location is required"),
+  serviceAreas: z.array(z.string()).default([]),
+  commissionRate: z.number().min(0).max(100).optional(),
+  bio: z.string().optional(),
+  profileImageUrl: z.string().url().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  linkedin: z.string().url().optional().or(z.literal("")),
+  isVerified: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+// For client-side validation (without userId)
+export const clientBrokerSchema = insertBrokerSchema.omit({
+  userId: true,
+});
+
+export type InsertBroker = z.infer<typeof insertBrokerSchema>;
+export type Broker = typeof brokers.$inferSelect;

@@ -90,14 +90,22 @@ export default function AuthHeader() {
               </Link>
             )}
             */}
-            {(currentRole === 'seller' || currentRole === 'broker') && (
-              <Link href="/add-property" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                Add Property
+            {currentRole === 'seller' && (
+              <Link href="/broker-registry" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+                Broker Registry
               </Link>
             )}
-            <Link href="/messages" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-              Messages
+                      {(currentRole === 'seller' || currentRole === 'broker') && (
+            <Link href="/add-property" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+              Add Property
             </Link>
+          )}
+          <Link href="/broker-registration" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+            Become a Broker
+          </Link>
+          <Link href="/messages" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md">
+            Messages
+          </Link>
           </nav>
 
           <div className="flex items-center space-x-4">
