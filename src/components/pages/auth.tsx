@@ -129,12 +129,13 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Image 
+            <img 
               src="/assets/prop-logo.png" 
               alt="PropertyHub Logo" 
               width={32} 
               height={32} 
               className="rounded"
+              loading="eager"
             />
           </div>
           <CardTitle className="text-2xl font-bold text-primary">Elgiriya Properties</CardTitle>

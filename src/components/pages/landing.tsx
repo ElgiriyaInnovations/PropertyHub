@@ -16,12 +16,13 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Image 
+              <img 
                 src="/assets/prop-logo.png" 
                 alt="PropertyHub Logo" 
                 width={32} 
                 height={32} 
                 className="mr-2 rounded"
+                loading="eager"
               />
               <h1 className="text-2xl font-bold text-primary">Elgiriya Properties</h1>
             </div>
@@ -630,12 +631,13 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <Image 
+                <img 
                   src="/assets/prop-logo.png" 
                   alt="PropertyHub Logo" 
                   width={32} 
                   height={32} 
                   className="mr-2 rounded"
+                  loading="eager"
                 />
                 <h3 className="text-2xl font-bold text-primary">Elgiriya Properties</h3>
               </div>
